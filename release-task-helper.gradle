@@ -1,0 +1,211 @@
+/*
+ * Copyright 2019 ThoughtWorks, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import groovy.json.JsonSlurper
+import groovyx.net.http.ContentType
+import groovyx.net.http.HTTPBuilder
+import groovyx.net.http.Method
+import groovyx.net.http.ParserRegistry
+
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath localGroovy()
+    classpath 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+  }
+}
+
+class GitHubRepository {
+  String owner
+  String repo
+
+  String token
+}
+
+class GoCDPluginExtension {
+  String id
+  String pluginVersion
+  String goCdVersion
+  String name
+  String description
+  String vendorName
+  String vendorUrl
+
+  boolean prerelease
+
+  Project pluginProject
+  Task[] assetsToRelease
+
+  final GitHubRepository githubRepo
+
+  @javax.inject.Inject
+  GoCDPluginExtension(ObjectFactory objectFactory) {
+    githubRepo = objectFactory.newInstance(GitHubRepository)
+  }
+
+  String fullVersion(Project project) {
+    project.git.distVersion() ? "${pluginVersion}-${project.git.distVersion()}" : pluginVersion
+  }
+
+  void githubRepo(Action<? super GitHubRepository> action) {
+    action.execute(githubRepo)
+  }
+}
+
+class ReleaseTask extends DefaultTask {
+
+  final String HEADER_USER_AGENT = 'gocd-gradle-github-release-plugin'
+  final String GITHUB_API_BASE_URL = "https://api.github.com"
+  final String GITHUB_API_ACCEPT_HEADER = "application/vnd.github.v3+json"
+
+
+  @TaskAction
+  release() {
+    GoCDPluginExtension gocdPlugin = project.gocdPlugin
+
+    def sha256Sums = project.gocdPlugin.assetsToRelease*.outputs*.files*.files.flatten().findAll {File it -> it.name.matches(".*\\.(SHA-256|SHA256)")}
+
+    def path = "/repos/${project.gocdPlugin.githubRepo.owner}/${project.gocdPlugin.githubRepo.repo}/releases"
+
+    def lastCommit = project.git.gitRevision()
+    def lastTag = project.git.getLastTag(project.extensions.gocdPlugin.prerelease)
+    def changelogHeader = lastTag ? "### Changelog ${lastTag}..${lastCommit.substring(0, 7)}" : "### Changelog"
+    def changeLog = project.git.getCommitsSinceLastTag(lastTag).replaceAll("\"", "")
+    def supportedGoCDVersionNote = "**Note:** *Supported GoCD server version: ${project.gocdPlugin.goCdVersion} or above.*"
+    def checksumNote = """**SHA256 Checksums**\n```\n${sha256Sums.collect({File eachFile -> eachFile.getText("utf-8").trim()}).join("\n")}\n```""".trim()
+
+
+    def postBody = [
+      tag_name: "v${gocdPlugin.fullVersion(project)}".toString(),
+      target_commitish: project.git.gitRevision().toString(),
+      name: "${project.extensions.gocdPlugin.prerelease ? 'Experimental: ' : ''}${gocdPlugin.fullVersion(project)}".toString(),
+      body: """\n$changelogHeader\n\n${changeLog}\n\n${
+        supportedGoCDVersionNote
+        checksumNote
+      }""".stripIndent().trim().toString(),
+      prerelease: gocdPlugin.prerelease
+    ]
+
+    def http = createHttpBuilder(GITHUB_API_BASE_URL)
+    http.request(Method.POST) {
+      uri.path += path
+      requestContentType = ContentType.JSON
+      body = postBody
+
+      headers['User-Agent'] = HEADER_USER_AGENT
+      headers['Authorization'] = "token ${project.gocdPlugin.githubRepo.token}"
+      headers['Accept'] = GITHUB_API_ACCEPT_HEADER
+
+      def postLogMessage = "POST ${uri.path}\n" +
+        " > User-Agent: ${headers['User-Agent']}\n" +
+        " > Authorization: (not shown)\n" +
+        " > Accept: ${headers.Accept}\n" +
+        " > body: $body\n"
+      logger.debug "$postLogMessage"
+
+      response.success = { resp, json ->
+        logger.debug "< $resp.statusLine"
+        logger.debug 'Response headers: \n' + resp.headers.collect { "< $it" }.join('\n')
+        if (gocdPlugin.assetsToRelease != null) {
+          postAssets(json.upload_url)
+        }
+      }
+
+      response.failure = { resp, json ->
+        logger.error "Error in $postLogMessage"
+        logger.debug 'Response headers: \n' + resp.headers.collect { "< $it" }.join('\n')
+        def errorMessage = json ? json.message : resp.statusLine
+        def ref = json ? "See $json.documentation_url" : ''
+        def errorDetails = json && json.errors ? "Details: " + json.errors.collect { it }.join('\n') : ''
+        throw new GradleScriptException("$errorMessage. $ref. $errorDetails", null)
+      }
+    }
+  }
+
+  def postAssets(String uploadUrl) {
+    project.gocdPlugin.assetsToRelease.each { Task assetTask ->
+
+      assetTask.outputs.files.forEach { File file ->
+        def name = file.name
+
+        def upload = uploadUrl.replace('{?name,label}', "?name=${name}&label=${name}")
+        logger.debug "upload url: ${upload}"
+
+        def url = new URL(upload as String)
+        def host = url.host + (url.port > 0 ? ":" + url.port + "" : "")
+        host = "${url.protocol}://${host}"
+        def path = url.path
+        def http = createHttpBuilder(host)
+
+        if (file.exists()) {
+          def map = URLConnection.getFileNameMap()
+          def contentType = map.getContentTypeFor(file.absolutePath)
+
+          http.ignoreSSLIssues()
+          http.request(Method.POST) { req ->
+            uri.path = path
+            uri.query = [
+              name: name,
+            ]
+            send ContentType.BINARY, file.bytes
+
+            headers['User-Agent'] = HEADER_USER_AGENT
+            headers['Authorization'] = "token ${project.gocdPlugin.githubRepo.token}"
+            headers['Accept'] = GITHUB_API_ACCEPT_HEADER
+            headers['Content-Type'] = contentType
+
+
+            response.success = { resp, json ->
+              logger.debug "$json"
+            }
+
+            response.failure = { resp, json ->
+              logger.error "$json"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private static HTTPBuilder createHttpBuilder(url) {
+    def http = new HTTPBuilder(url)
+    http.parser['text/json'] = { resp ->
+      def bufferedText = resp.entity.content.getText(ParserRegistry.getCharset(resp)).trim()
+      return new JsonSlurper().parseText(bufferedText)
+    }
+
+    http.parser['application/json'] = http.parser['text/json']
+
+    return http
+  }
+
+}
+
+class GoCDPlugin implements Plugin<Project> {
+  void apply(Project project) {
+    GoCDPluginExtension gocdPluginExtension = project.extensions.create('gocdPlugin', GoCDPluginExtension)
+
+    def githubReleaseTask = project.tasks.create('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
+      thisTask.dependsOn project.subprojects*.tasks*.findByName('assemble')
+    }
+
+  }
+}
+
+apply plugin: GoCDPlugin
