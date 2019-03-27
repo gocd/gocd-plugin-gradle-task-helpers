@@ -1,17 +1,19 @@
-def color = [
+class TestHelperANSI {
+  static Map<String, String> COLOR = [
     ANSI_BOLD_WHITE: "\u001B[0;1m",
     ANSI_RESET     : "\u001B[0m",
     ANSI_RED       : "\u001B[31m",
     ANSI_GREEN     : "\u001B[32m",
     ANSI_YELLOW    : "\u001B[33m",
     ANSI_WHITE     : "\u001B[37m"
-]
+  ]
 
-def symbols = [
+  static Map<String, String> SYMBOLS = [
     CHECK_MARK  : "\u2714",
     NEUTRAL_FACE: "\u0CA0_\u0CA0",
     X_MARK      : "\u2718"
-]
+  ]
+}
 
 
 tasks.withType(Test) {
@@ -25,7 +27,7 @@ tasks.withType(Test) {
       if (suite.name.startsWith("Test Run") || suite.name.startsWith("Gradle Worker")) return
 
       if (suite.parent != null && suite.className != null) {
-        println(color.ANSI_BOLD_WHITE + suite.name + color.ANSI_RESET)
+        println(TestHelperANSI.COLOR.ANSI_BOLD_WHITE + suite.name + TestHelperANSI.COLOR.ANSI_RESET)
       }
     }
 
@@ -38,7 +40,7 @@ tasks.withType(Test) {
     afterTest { descriptor, result ->
       previousFailed = false
       def executionTime = (result.endTime - result.startTime) / 1000
-      println("    ${resultIndicator(result)}$color.ANSI_RESET $descriptor.name $color.ANSI_YELLOW($executionTime seconds)$color.ANSI_RESET")
+      println("    ${resultIndicator(result)}$TestHelperANSI.COLOR.ANSI_RESET $descriptor.name $TestHelperANSI.COLOR.ANSI_YELLOW($executionTime seconds)$TestHelperANSI.COLOR.ANSI_RESET")
 
       if (result.failedTestCount > 0) {
         previousFailed = true
@@ -53,49 +55,48 @@ tasks.withType(Test) {
       }
 
       if (!desc.parent) { // will match the outermost suite
-        def failStyle = color.ANSI_RED
-        def skipStyle = color.ANSI_YELLOW
+        def failStyle = TestHelperANSI.COLOR.ANSI_RED
+        def skipStyle = TestHelperANSI.COLOR.ANSI_YELLOW
         def summaryStyle = summaryStyle(result)
 
         if (result.failedTestCount > 0) {
-          failStyle = color.ANSI_RED
+          failStyle = TestHelperANSI.COLOR.ANSI_RED
         }
         if (result.skippedTestCount > 0) {
-          skipStyle = color.ANSI_YELLOW
+          skipStyle = TestHelperANSI.COLOR.ANSI_YELLOW
         }
 
 
         println("--------------------------------------------------------------------------")
-        println("Results: $summaryStyle$result.resultType$color.ANSI_RESET ($result.testCount tests, $color.ANSI_GREEN$result.successfulTestCount passed$color.ANSI_RESET, $failStyle$result.failedTestCount failed$color.ANSI_RESET, $skipStyle$result.skippedTestCount skipped$color.ANSI_RESET)")
+        println("Results: $summaryStyle$result.resultType$TestHelperANSI.COLOR.ANSI_RESET ($result.testCount tests, $TestHelperANSI.COLOR.ANSI_GREEN$result.successfulTestCount passed$TestHelperANSI.COLOR.ANSI_RESET, $failStyle$result.failedTestCount failed$TestHelperANSI.COLOR.ANSI_RESET, $skipStyle$result.skippedTestCount skipped$TestHelperANSI.COLOR.ANSI_RESET)")
         println("--------------------------------------------------------------------------")
       }
     }
   }
 }
 
-
 private String summaryStyle(result) {
-  def summaryStyle = color.ANSI_WHITE
+  def summaryStyle = TestHelperANSI.COLOR.ANSI_WHITE
   switch (result.resultType) {
     case TestResult.ResultType.SUCCESS:
-      summaryStyle = color.ANSI_GREEN
+      summaryStyle = TestHelperANSI.COLOR.ANSI_GREEN
       break
     case TestResult.ResultType.FAILURE:
-      summaryStyle = color.ANSI_RED
+      summaryStyle = TestHelperANSI.COLOR.ANSI_RED
       break
   }
   summaryStyle
 }
 
 private String resultIndicator(result) {
-  def indicator = color.ANSI_WHITE
+  def indicator = TestHelperANSI.COLOR.ANSI_WHITE
 
   if (result.failedTestCount > 0) {
-    indicator = color.ANSI_RED + symbols.X_MARK
+    indicator = TestHelperANSI.COLOR.ANSI_RED + TestHelperANSI.SYMBOLS.X_MARK
   } else if (result.skippedTestCount > 0) {
-    indicator = color.ANSI_YELLOW + symbols.NEUTRAL_FACE
+    indicator = TestHelperANSI.COLOR.ANSI_YELLOW + TestHelperANSI.SYMBOLS.NEUTRAL_FACE
   } else {
-    indicator = color.ANSI_GREEN + symbols.CHECK_MARK
+    indicator = TestHelperANSI.COLOR.ANSI_GREEN + TestHelperANSI.SYMBOLS.CHECK_MARK
   }
   indicator
 }
