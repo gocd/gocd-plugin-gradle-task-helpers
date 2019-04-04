@@ -91,7 +91,7 @@ class ReleaseTask extends DefaultTask {
 
 
     def postBody = [
-      tag_name: "v${gocdPlugin.fullVersion(project)}".toString(),
+      tag_name: "v${gocdPlugin.fullVersion(project)}${project.extensions.gocdPlugin.prerelease ? "-exp": ""}".toString(),
       target_commitish: project.git.gitRevision().toString(),
       name: "${project.extensions.gocdPlugin.prerelease ? 'Experimental: ' : ''}${gocdPlugin.fullVersion(project)}".toString(),
       body: """\n$changelogHeader\n\n${changeLog}\n\n${
