@@ -78,7 +78,7 @@ class ReleaseTask extends DefaultTask {
   release() {
     GoCDPluginExtension gocdPlugin = project.gocdPlugin
 
-    def sha256Sums = project.gocdPlugin.assetsToRelease*.outputs*.files*.files.flatten().findAll {File it -> it.name.matches(".*\\.(SHA-256|SHA256)")}
+    def sha256Sums = project.gocdPlugin.assetsToRelease*.outputs*.files*.files.flatten().findAll { File it -> it.name.matches(".*\\.(SHA-256|SHA256)") }
 
     def path = "/repos/${project.gocdPlugin.githubRepo.owner}/${project.gocdPlugin.githubRepo.repo}/releases"
 
@@ -91,7 +91,7 @@ class ReleaseTask extends DefaultTask {
 
 
     def postBody = [
-      tag_name: "v${gocdPlugin.fullVersion(project)}".toString(),
+      tag_name: "v${gocdPlugin.fullVersion(project)}${project.extensions.gocdPlugin.prerelease ? "-exp": ""}".toString(),
       target_commitish: project.git.gitRevision().toString(),
       name: "${project.extensions.gocdPlugin.prerelease ? 'Experimental: ' : ''}${gocdPlugin.fullVersion(project)}".toString(),
       body: """\n$changelogHeader\n\n${changeLog}\n\n${
@@ -201,10 +201,9 @@ class GoCDPlugin implements Plugin<Project> {
   void apply(Project project) {
     GoCDPluginExtension gocdPluginExtension = project.extensions.create('gocdPlugin', GoCDPluginExtension)
 
-    def githubReleaseTask = project.tasks.create('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
-      thisTask.dependsOn project.subprojects*.tasks*.findByName('assemble')
+    project.tasks.create('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
+      thisTask.dependsOn project.allprojects*.tasks*.findByName('assemble')
     }
-
   }
 }
 
