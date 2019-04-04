@@ -88,10 +88,11 @@ class ReleaseTask extends DefaultTask {
     def changeLog = project.git.getCommitsSinceLastTag(lastTag).replaceAll("\"", "")
     def supportedGoCDVersionNote = "**Note:** *Supported GoCD server version: ${project.gocdPlugin.goCdVersion} or above.*"
     def checksumNote = """**SHA256 Checksums**\n```\n${sha256Sums.collect({File eachFile -> eachFile.getText("utf-8").trim()}).join("\n")}\n```""".trim()
+    def tagName = project.extensions.gocdPlugin.prerelease ? "${gocdPlugin.fullVersion(project)}-exp" : gocdPlugin.fullVersion(project)
 
 
     def postBody = [
-      tag_name: "v${gocdPlugin.fullVersion(project)}${project.extensions.gocdPlugin.prerelease ? "-exp": ""}".toString(),
+      tag_name: "v${tagName}".toString(),
       target_commitish: project.git.gitRevision().toString(),
       name: "${project.extensions.gocdPlugin.prerelease ? 'Experimental: ' : ''}${gocdPlugin.fullVersion(project)}".toString(),
       body: """\n$changelogHeader\n\n${changeLog}\n\n${
