@@ -87,19 +87,19 @@ class ReleaseTask extends DefaultTask {
     def changelogHeader = lastTag ? "### Changelog ${lastTag}..${lastCommit.substring(0, 7)}" : "### Changelog"
     def changeLog = project.git.getCommitsSinceLastTag(lastTag).replaceAll("\"", "")
     def supportedGoCDVersionNote = "**Note:** *Supported GoCD server version: ${project.gocdPlugin.goCdVersion} or above.*"
-    def checksumNote = """**SHA256 Checksums**\n```\n${sha256Sums.collect({File eachFile -> eachFile.getText("utf-8").trim()}).join("\n")}\n```""".trim()
+    def checksumNote = """**SHA256 Checksums**\n```\n${sha256Sums.collect({ File eachFile -> eachFile.getText("utf-8").trim() }).join("\n")}\n```""".trim()
     def tagName = project.extensions.gocdPlugin.prerelease ? "${gocdPlugin.fullVersion(project)}-exp" : gocdPlugin.fullVersion(project)
 
 
     def postBody = [
-      tag_name: "v${tagName}".toString(),
+      tag_name        : "v${tagName}".toString(),
       target_commitish: project.git.gitRevision().toString(),
-      name: "${project.extensions.gocdPlugin.prerelease ? 'Experimental: ' : ''}${gocdPlugin.fullVersion(project)}".toString(),
-      body: """\n$changelogHeader\n\n${changeLog}\n\n${
+      name            : "${project.extensions.gocdPlugin.prerelease ? 'Experimental: ' : ''}${gocdPlugin.fullVersion(project)}".toString(),
+      body            : """\n$changelogHeader\n\n${changeLog}\n\n${
         supportedGoCDVersionNote
         checksumNote
       }""".stripIndent().trim().toString(),
-      prerelease: gocdPlugin.prerelease
+      prerelease      : gocdPlugin.prerelease
     ]
 
     def http = createHttpBuilder(GITHUB_API_BASE_URL)
@@ -203,7 +203,7 @@ class GoCDPlugin implements Plugin<Project> {
     GoCDPluginExtension gocdPluginExtension = project.extensions.create('gocdPlugin', GoCDPluginExtension)
 
     project.tasks.create('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
-      thisTask.dependsOn project.allprojects*.tasks*.findByName('assemble')
+      thisTask.dependsOn project.allprojects*.tasks*.findByName('assemble').findAll { it != null }
     }
   }
 }
