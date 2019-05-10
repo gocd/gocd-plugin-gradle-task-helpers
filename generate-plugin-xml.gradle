@@ -16,9 +16,19 @@
 
 private static String xmlTemplate(Project project) {
   def gocdPlugin = project.gocdPlugin
+
+  def targetOsSnippet = ""
+
+  if (gocdPlugin.targetOs != null && !gocdPlugin.targetOs.isEmpty()) {
+    String values = gocdPlugin.targetOs.collect({eachTargetOs -> "<value>${eachTargetOs}</value>"}).join("\n${' ' * 10}")
+    targetOsSnippet = """<target-os>
+          ${values}
+        </target-os>"""
+  }
+
   return """
     <!--
-      ~ Copyright 2018 ThoughtWorks, Inc.
+      ~ Copyright ${java.time.Year.now().getValue()} ThoughtWorks, Inc.
       ~
       ~ Licensed under the Apache License, Version 2.0 (the "License");
       ~ you may not use this file except in compliance with the License.
@@ -43,6 +53,7 @@ private static String xmlTemplate(Project project) {
           <name>${gocdPlugin.vendorName}</name>
           <url>${gocdPlugin.vendorUrl}</url>
         </vendor>
+        ${targetOsSnippet}
       </about>
     </go-plugin>
     """.stripIndent().trim()
@@ -52,7 +63,7 @@ private static String pluginProperties(Project project) {
   def gocdPlugin = project.gocdPlugin
   return """
     #
-    # Copyright 2018 ThoughtWorks, Inc.
+    # Copyright ${java.time.Year.now().getValue()} ThoughtWorks, Inc.
     #
     # Licensed under the Apache License, Version 2.0 (the "License");
     # you may not use this file except in compliance with the License.

@@ -45,6 +45,7 @@ class GoCDPluginExtension {
   String description
   String vendorName
   String vendorUrl
+  List<String> targetOs = []
 
   boolean prerelease
 
