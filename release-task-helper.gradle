@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+import com.github.jk1.license.filter.*
+import com.github.jk1.license.render.*
 import groovy.json.JsonSlurper
 import groovyx.net.http.ContentType
 import groovyx.net.http.HTTPBuilder
@@ -21,12 +25,14 @@ import groovyx.net.http.ParserRegistry
 
 buildscript {
   repositories {
+    gradlePluginPortal()
     mavenCentral()
   }
 
   dependencies {
     classpath localGroovy()
     classpath 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+    classpath 'com.github.jk1:gradle-license-report:1.7'
   }
 }
 
@@ -37,7 +43,18 @@ class GitHubRepository {
   String token
 }
 
+class Report {
+  String outputDir
+  List<Project> projects
+  List<String> configurations = ["compile"]
+  List<String> excludeGroups = []
+  List<String> excludes = []
+  boolean excludeOwnGroup = true
+  def importers = []
+}
+
 class GoCDPluginExtension {
+
   String id
   String pluginVersion
   String goCdVersion
@@ -53,10 +70,12 @@ class GoCDPluginExtension {
   Task[] assetsToRelease
 
   final GitHubRepository githubRepo
+  final Report licenseReport
 
   @javax.inject.Inject
   GoCDPluginExtension(ObjectFactory objectFactory) {
     githubRepo = objectFactory.newInstance(GitHubRepository)
+    licenseReport = objectFactory.newInstance(Report)
   }
 
   String fullVersion(Project project) {
@@ -65,6 +84,10 @@ class GoCDPluginExtension {
 
   void githubRepo(Action<? super GitHubRepository> action) {
     action.execute(githubRepo)
+  }
+
+  void licenseReport(Action<? super Report> action) {
+    action.execute(licenseReport)
   }
 }
 
@@ -88,7 +111,9 @@ class ReleaseTask extends DefaultTask {
     def changelogHeader = lastTag ? "### Changelog ${lastTag}..${lastCommit.substring(0, 7)}" : "### Changelog"
     def changeLog = project.git.getCommitsSinceLastTag(lastTag).replaceAll("\"", "")
     def supportedGoCDVersionNote = "**Note:** *Supported GoCD server version: ${project.gocdPlugin.goCdVersion} or above.*"
-    def checksumNote = """**SHA256 Checksums**\n```\n${sha256Sums.collect({ File eachFile -> eachFile.getText("utf-8").trim() }).join("\n")}\n```""".trim()
+    def checksumNote = """**SHA256 Checksums**\n```\n${
+      sha256Sums.collect({ File eachFile -> eachFile.getText("utf-8").trim() }).join("\n")
+    }\n```""".trim()
     def tagName = project.extensions.gocdPlugin.prerelease ? "${gocdPlugin.fullVersion(project)}-exp" : gocdPlugin.fullVersion(project)
 
 
@@ -199,14 +224,56 @@ class ReleaseTask extends DefaultTask {
 
 }
 
+project.rootProject.ext.defaultAllowedLicenses = writeTempFile("./default-allowed-licenses.json")
+project.rootProject.ext.licenseNormalizerBundle = writeTempFile("./license-normalizer-bundle.json")
+
 class GoCDPlugin implements Plugin<Project> {
   void apply(Project project) {
+    project.configure(project) {
+      project.allprojects { apply plugin: com.github.jk1.license.LicenseReportPlugin }
+    }
+
     GoCDPluginExtension gocdPluginExtension = project.extensions.create('gocdPlugin', GoCDPluginExtension)
 
-    project.tasks.create('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
-      thisTask.dependsOn project.allprojects*.tasks*.findByName('assemble').findAll { it != null }
+    project.afterEvaluate {
+      initializeLicenseReporting(gocdPluginExtension, project)
+
+      project.tasks.create('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
+        thisTask.dependsOn project.allprojects*.tasks*.findByName('assemble').findAll { it != null }
+      }
     }
   }
+
+  private void initializeLicenseReporting(GoCDPluginExtension gocdPluginExtension, Project project) {
+    Project pluginProject = gocdPluginExtension.pluginProject
+    pluginProject.tasks.assemble.dependsOn("checkLicense")
+    pluginProject.extensions.licenseReport.outputDir = gocdPluginExtension.licenseReport.outputDir ?: "$project.rootDir/build/license"
+    pluginProject.extensions.licenseReport.projects = gocdPluginExtension.licenseReport.projects ?: project.allprojects
+    pluginProject.extensions.licenseReport.configurations = gocdPluginExtension.licenseReport.configurations ?: ["compile"]
+    pluginProject.extensions.licenseReport.excludeGroups = gocdPluginExtension.licenseReport.excludeGroups
+    pluginProject.extensions.licenseReport.excludeOwnGroup = gocdPluginExtension.licenseReport.excludeOwnGroup
+    pluginProject.extensions.licenseReport.excludes = gocdPluginExtension.licenseReport.excludes
+    pluginProject.extensions.licenseReport.renderers = [new TextReportRenderer()]
+    pluginProject.extensions.licenseReport.importers = gocdPluginExtension.licenseReport.importers
+    pluginProject.extensions.licenseReport.filters = new LicenseBundleNormalizer(bundlePath: project.rootProject.licenseNormalizerBundle)
+    pluginProject.extensions.licenseReport.allowedLicensesFile = project.rootProject.defaultAllowedLicenses
+
+    project.allprojects*.tasks*.findByName('jar').findAll { jar ->
+      if (jar == null) return
+      jar.into('license-report') {
+        from "$pluginProject.extensions.licenseReport.outputDir/THIRD-PARTY-NOTICES.txt"
+      }
+    }
+  }
+}
+
+private File writeTempFile(String fileName) {
+  def content = (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve(fileName).toURL().text
+  def name = fileName.substring(0, fileName.lastIndexOf('.'))
+  def ext = fileName.substring(fileName.lastIndexOf('.'))
+  File file = File.createTempFile(name, ext)
+  file.write content
+  file
 }
 
 apply plugin: GoCDPlugin
