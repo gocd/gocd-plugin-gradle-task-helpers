@@ -1,6 +1,9 @@
 {
   "allowedLicenses": [
     {
+      "moduleLicense": "BSD"
+    },
+    {
       "moduleLicense": "(?i)^Apache License, V(ersion)?\\s*2\\.0$"
     },
     {
