@@ -239,11 +239,22 @@ class GoCDPlugin implements Plugin<Project> {
       initializeLicenseReporting(gocdPluginExtension, project)
 
       project.tasks.create('showLicenseReportErrors') { DefaultTask thisTask ->
-        project.tasks.getByName('checkLicense').finalizedBy(thisTask)
+        def checkLicenseTask = project.tasks.getByName('checkLicense')
+        checkLicenseTask.finalizedBy(thisTask)
 
         doLast {
-          println "Failed to validate licenses for the following modules:"
-          println gocdPluginExtension.pluginProject.extensions.licenseReport.allowedLicensesFile.text
+
+          def reportText = checkLicenseTask.outputs.files.singleFile.text
+          def reportContents = new JsonSlurper().parseText(reportText)
+
+          if (reportContents.containsKey('dependenciesWithoutAllowedLicenses')) {
+            if (!reportContents.dependenciesWithoutAllowedLicenses.empty) {
+                println "Failed to validate licenses for the following modules:"
+                println reportText
+            }
+          } else {
+            throw new GradleException("Could not find key `dependenciesWithoutAllowedLicenses` in license report: ${reportText}")
+          }
         }
       }
 

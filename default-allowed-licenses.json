@@ -1,28 +1,26 @@
 {
   "allowedLicenses": [
     {
-      "moduleLicense": "Apache License, Version 2.0"
+      "moduleLicense": "(?i)^Apache License, V(ersion)?\\s*2\\.0$"
     },
     {
-      "moduleLicense": "MIT License"
+      "moduleLicense": "(?i)^MIT License$"
     },
     {
-      "moduleLicense": "CDDL+GPL License"
+      "moduleLicense": "(?i)^CDDL\\+GPL License$"
     },
     {
-      "moduleLicense": "CDDL + GPLv2 with classpath exception"
+      "moduleLicense": "(?i)^CDDL \\+ GPLv2 with classpath exception$"
     },
     {
-      "moduleLicense": "Bouncy Castle Licence"
+      "moduleLicense": "(?i)^Bouncy Castle Licence$"
     },
     {
-      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version xxxx1.1"
+      // CDDL 1.0 and 1.1
+      "moduleLicense": "(?i)^Common Development and Distribution License \\(CDDL\\)(,)? V(ersion)?\\s*(1\\.[0x1])"
     },
     {
-      "moduleLicense": "Common Development and Distribution License (CDDL) v1.0"
-    },
-    {
-      "moduleLicense": "GNU Lesser General Public License Version 2.1"
+      "moduleLicense": "(?i)^GNU Lesser General Public License Version 2.1$"
     }
   ]
 }
