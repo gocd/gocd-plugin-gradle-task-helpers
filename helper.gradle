@@ -13,28 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-buildscript {
-  repositories {
-    gradlePluginPortal()
-  }
 
-  dependencies {
-    classpath 'com.github.ben-manes:gradle-versions-plugin:0.21.0'
-  }
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+
+    dependencies {
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.21.0'
+    }
 }
 
-
 subprojects {
-  apply plugin: 'java'
+    apply plugin: 'java'
 
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 }
 
 task allDependencies {
-  dependsOn allprojects.collect { "$it.path:dependencies" }
+    dependsOn allprojects.collect { "$it.path:dependencies" }
 
-  description = "Print dependency tree of all projects"
+    description = "Print dependency tree of all projects"
 }
 
 apply plugin: com.github.benmanes.gradle.versions.VersionsPlugin
