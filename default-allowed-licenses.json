@@ -1,20 +1,28 @@
 {
   "allowedLicenses": [
     {
-      "moduleLicense": "MIT License",
-      "moduleName": ".*"
+      "moduleLicense": "Apache License, Version 2.0"
     },
     {
-      "moduleLicense": "MIT.*",
-      "moduleName": ".*"
+      "moduleLicense": "MIT License"
     },
     {
-      "moduleLicense": "Apache License, Version 2.0",
-      "moduleName": ".*"
+      "moduleLicense": "CDDL+GPL License"
     },
     {
-      "moduleLicense": ".*Apache.*2.0",
-      "moduleName": ".*"
+      "moduleLicense": "CDDL + GPLv2 with classpath exception"
+    },
+    {
+      "moduleLicense": "Bouncy Castle Licence"
+    },
+    {
+      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version xxxx1.1"
+    },
+    {
+      "moduleLicense": "Common Development and Distribution License (CDDL) v1.0"
+    },
+    {
+      "moduleLicense": "GNU Lesser General Public License Version 2.1"
     }
   ]
 }

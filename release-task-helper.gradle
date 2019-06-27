@@ -238,6 +238,15 @@ class GoCDPlugin implements Plugin<Project> {
     project.afterEvaluate {
       initializeLicenseReporting(gocdPluginExtension, project)
 
+      project.tasks.create('showLicenseReportErrors') { DefaultTask thisTask ->
+        project.tasks.getByName('checkLicense').finalizedBy(thisTask)
+
+        doLast {
+          println "Failed to validate licenses for the following modules:"
+          println gocdPluginExtension.pluginProject.extensions.licenseReport.allowedLicensesFile.text
+        }
+      }
+
       project.tasks.create('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
         thisTask.dependsOn project.allprojects*.tasks*.findByName('assemble').findAll { it != null }
       }
@@ -273,6 +282,7 @@ private File writeTempFile(String fileName) {
   def ext = fileName.substring(fileName.lastIndexOf('.'))
   File file = File.createTempFile(name, ext)
   file.write content
+  file.deleteOnExit()
   file
 }
 
