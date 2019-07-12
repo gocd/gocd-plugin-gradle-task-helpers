@@ -15,61 +15,62 @@ class TestHelperANSI {
   ]
 }
 
+allprojects {
+  tasks.withType(Test) {
+    maxParallelForks = 1
 
-tasks.withType(Test) {
-  maxParallelForks = 1
+    testLogging {
+      def previousFailed = false
+      exceptionFormat 'full'
 
-  testLogging {
-    def previousFailed = false
-    exceptionFormat 'full'
+      beforeSuite { suite ->
+        if (suite.name.startsWith("Test Run") || suite.name.startsWith("Gradle Worker")) return
 
-    beforeSuite { suite ->
-      if (suite.name.startsWith("Test Run") || suite.name.startsWith("Gradle Worker")) return
-
-      if (suite.parent != null && suite.className != null) {
-        println(TestHelperANSI.COLOR.ANSI_BOLD_WHITE + suite.name + TestHelperANSI.COLOR.ANSI_RESET)
-      }
-    }
-
-    beforeTest {
-      if (previousFailed) {
-        System.err.println("")
-      }
-    }
-
-    afterTest { descriptor, result ->
-      previousFailed = false
-      def executionTime = (result.endTime - result.startTime) / 1000
-      println("    ${resultIndicator(result)}$TestHelperANSI.COLOR.ANSI_RESET $descriptor.name $TestHelperANSI.COLOR.ANSI_YELLOW($executionTime seconds)$TestHelperANSI.COLOR.ANSI_RESET")
-
-      if (result.failedTestCount > 0) {
-        previousFailed = true
-        println('')
-        println(result.exception)
-      }
-    }
-
-    afterSuite { desc, result ->
-      if (desc.parent != null && desc.className != null) {
-        println("")
+        if (suite.parent != null && suite.className != null) {
+          println(TestHelperANSI.COLOR.ANSI_BOLD_WHITE + suite.name + TestHelperANSI.COLOR.ANSI_RESET)
+        }
       }
 
-      if (!desc.parent) { // will match the outermost suite
-        def failStyle = TestHelperANSI.COLOR.ANSI_RED
-        def skipStyle = TestHelperANSI.COLOR.ANSI_YELLOW
-        def summaryStyle = summaryStyle(result)
+      beforeTest {
+        if (previousFailed) {
+          System.err.println("")
+        }
+      }
+
+      afterTest { descriptor, result ->
+        previousFailed = false
+        def executionTime = (result.endTime - result.startTime) / 1000
+        println("    ${resultIndicator(result)}$TestHelperANSI.COLOR.ANSI_RESET $descriptor.name $TestHelperANSI.COLOR.ANSI_YELLOW($executionTime seconds)$TestHelperANSI.COLOR.ANSI_RESET")
 
         if (result.failedTestCount > 0) {
-          failStyle = TestHelperANSI.COLOR.ANSI_RED
+          previousFailed = true
+          println('')
+          println(result.exception)
         }
-        if (result.skippedTestCount > 0) {
-          skipStyle = TestHelperANSI.COLOR.ANSI_YELLOW
+      }
+
+      afterSuite { desc, result ->
+        if (desc.parent != null && desc.className != null) {
+          println("")
         }
 
+        if (!desc.parent) { // will match the outermost suite
+          def failStyle = TestHelperANSI.COLOR.ANSI_RED
+          def skipStyle = TestHelperANSI.COLOR.ANSI_YELLOW
+          def summaryStyle = summaryStyle(result)
 
-        println("--------------------------------------------------------------------------")
-        println("Results: $summaryStyle$result.resultType$TestHelperANSI.COLOR.ANSI_RESET ($result.testCount tests, $TestHelperANSI.COLOR.ANSI_GREEN$result.successfulTestCount passed$TestHelperANSI.COLOR.ANSI_RESET, $failStyle$result.failedTestCount failed$TestHelperANSI.COLOR.ANSI_RESET, $skipStyle$result.skippedTestCount skipped$TestHelperANSI.COLOR.ANSI_RESET)")
-        println("--------------------------------------------------------------------------")
+          if (result.failedTestCount > 0) {
+            failStyle = TestHelperANSI.COLOR.ANSI_RED
+          }
+          if (result.skippedTestCount > 0) {
+            skipStyle = TestHelperANSI.COLOR.ANSI_YELLOW
+          }
+
+
+          println("--------------------------------------------------------------------------")
+          println("Results: $summaryStyle$result.resultType$TestHelperANSI.COLOR.ANSI_RESET ($result.testCount tests, $TestHelperANSI.COLOR.ANSI_GREEN$result.successfulTestCount passed$TestHelperANSI.COLOR.ANSI_RESET, $failStyle$result.failedTestCount failed$TestHelperANSI.COLOR.ANSI_RESET, $skipStyle$result.skippedTestCount skipped$TestHelperANSI.COLOR.ANSI_RESET)")
+          println("--------------------------------------------------------------------------")
+        }
       }
     }
   }
