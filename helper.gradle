@@ -14,21 +14,8 @@
  * limitations under the License.
  */
 
-buildscript {
-    repositories {
-        gradlePluginPortal()
-    }
-
-    dependencies {
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.22.0'
-        classpath "se.patrikerdes:gradle-use-latest-versions-plugin:0.2.12"
-    }
-}
-
 subprojects {
     apply plugin: 'java'
-    apply plugin: com.github.benmanes.gradle.versions.VersionsPlugin
-    apply plugin: se.patrikerdes.UseLatestVersionsPlugin
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -40,8 +27,8 @@ task allDependencies {
     description = "Print dependency tree of all projects"
 }
 
-apply plugin: com.github.benmanes.gradle.versions.VersionsPlugin
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./version-helper.gradle")
+apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./dependency-updates.gradle")
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./generate-plugin-xml.gradle")
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./archive-task-helper.gradle")
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./release-task-helper.gradle")
