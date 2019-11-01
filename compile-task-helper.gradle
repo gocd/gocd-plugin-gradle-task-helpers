@@ -16,6 +16,8 @@
 
 allprojects {
   tasks.withType(JavaCompile) {
+    options.deprecation = true
+    options.debug = true
     options.warnings = false
     options.encoding = "UTF-8"
     options.compilerArgs += '-Xlint:-deprecation'
