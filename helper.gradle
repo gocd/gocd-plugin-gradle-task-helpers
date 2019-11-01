@@ -24,7 +24,7 @@ if (System.getenv().containsKey("GO_SERVER_URL")) {
     println separator
     println("")
 
-    if (System.getenv().containsKey('DUMP_SYSTEM_ENV')) {}
+    if (System.getenv().containsKey('DUMP_SYSTEM_ENV')) {
             println("       JVM properties: ${System.getProperties()}");
             println("Environment Variables: ${System.getenv()}");
             println separator
