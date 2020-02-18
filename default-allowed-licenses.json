@@ -20,6 +20,9 @@
     },
     {
       "moduleLicense": "Bouncy Castle Licence"
+    },
+    {
+      "moduleLicense": "EDL 1.0"
     }
   ]
 }
