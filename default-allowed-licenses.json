@@ -23,6 +23,9 @@
     },
     {
       "moduleLicense": "EDL 1.0"
+    },
+    {
+      "moduleLicense": "Eclipse Distribution License - v 1.0"
     }
   ]
 }
