@@ -50,6 +50,7 @@
     { "bundleName" : "CDDL-1.0", "licenseFileContentPattern" : ".*CDDL.*1\\.0" },
     { "bundleName" : "BSD-3-Clause", "licenseNamePattern" : "BSD[ |-]3-[c|C]lause.*" },
     { "bundleName" : "BSD-2-Clause", "licenseNamePattern" : "BSD[ |-]2-[c|C]lause.*" },
+    { "bundleName" : "BSD-2-Clause", "licenseNamePattern" : "The[ |-]2-[c|C]lause.BSD.*" },
     { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "Common Development and Distribution( License)?" },
     { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "(?i)Common Development and Distribution License \\(CDDL\\) v(ersion)?\\s*1.0" },
     { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "CDDL(,)? (v)?1(\\.0)" },
