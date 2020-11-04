@@ -91,13 +91,65 @@ class GoCDPluginExtension {
   }
 }
 
-class ReleaseTask extends DefaultTask {
-
+abstract class ReleaseHelperTask extends DefaultTask {
   final String HEADER_USER_AGENT = 'gocd-gradle-github-release-plugin'
   final String GITHUB_API_BASE_URL = "https://api.github.com"
   final String GITHUB_API_ACCEPT_HEADER = "application/vnd.github.v3+json"
 
+  protected static HTTPBuilder createHttpBuilder(url) {
+    def http = new HTTPBuilder(url)
+    http.parser['text/json'] = { resp ->
+      def bufferedText = resp.entity.content.getText(ParserRegistry.getCharset(resp)).trim()
+      return new JsonSlurper().parseText(bufferedText)
+    }
 
+    http.parser['application/json'] = http.parser['text/json']
+
+    return http
+  }
+}
+
+class VerifyExpRelease extends ReleaseHelperTask {
+  @TaskAction
+  verify() {
+    GoCDPluginExtension gocdPlugin = project.gocdPlugin
+    def tagName = "v${gocdPlugin.fullVersion(project)}-exp".toString()
+    def path = "/repos/${project.gocdPlugin.githubRepo.owner}/${project.gocdPlugin.githubRepo.repo}/releases/tags/${tagName}"
+
+    def http = createHttpBuilder(GITHUB_API_BASE_URL)
+    http.request(Method.GET) {
+      uri.path += path
+      requestContentType = ContentType.JSON
+
+      headers['User-Agent'] = HEADER_USER_AGENT
+      headers['Authorization'] = "token ${project.gocdPlugin.githubRepo.token}"
+      headers['Accept'] = GITHUB_API_ACCEPT_HEADER
+
+      def postLogMessage = "GET ${uri.path}\n" +
+        " > User-Agent: ${headers['User-Agent']}\n" +
+        " > Authorization: (not shown)\n" +
+        " > Accept: ${headers.Accept}\n"
+      logger.debug "$postLogMessage"
+
+      response.success = { resp, json ->
+        logger.debug "< $resp.statusLine"
+        logger.debug 'Response headers: \n' + resp.headers.collect { "< $it" }.join('\n')
+        println 'Experimental release is present!!!'
+      }
+
+      response.failure = { resp, json ->
+        logger.error "Error in $postLogMessage"
+        logger.debug 'Response headers: \n' + resp.headers.collect { "< $it" }.join('\n')
+        def errorMessage = json ? json.message : resp.statusLine
+        def ref = json ? "See $json.documentation_url" : ''
+        def errorDetails = json && json.errors ? "Details: " + json.errors.collect { it }.join('\n') : ''
+        throw new GradleScriptException("Error while fetching experimental release: $errorMessage. $ref. $errorDetails", null)
+      }
+    }
+  }
+}
+
+class ReleaseTask extends ReleaseHelperTask {
   @TaskAction
   release() {
     GoCDPluginExtension gocdPlugin = project.gocdPlugin
@@ -209,19 +261,6 @@ class ReleaseTask extends DefaultTask {
       }
     }
   }
-
-  private static HTTPBuilder createHttpBuilder(url) {
-    def http = new HTTPBuilder(url)
-    http.parser['text/json'] = { resp ->
-      def bufferedText = resp.entity.content.getText(ParserRegistry.getCharset(resp)).trim()
-      return new JsonSlurper().parseText(bufferedText)
-    }
-
-    http.parser['application/json'] = http.parser['text/json']
-
-    return http
-  }
-
 }
 
 project.rootProject.ext.defaultAllowedLicenses = writeTempFile("./default-allowed-licenses.json")
@@ -261,6 +300,7 @@ class GoCDPlugin implements Plugin<Project> {
       project.tasks.create('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
         thisTask.dependsOn project.allprojects*.tasks*.findByName('assemble').findAll { it != null }
       }
+      project.tasks.create('verifyExpRelease', VerifyExpRelease)
     }
   }
 
