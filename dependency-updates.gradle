@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-apply plugin: "com.github.ben-manes.versions"
-apply plugin: "se.patrikerdes.use-latest-versions"
 
 buildscript {
-  repositories {
-    gradlePluginPortal()
-  }
+    repositories {
+        gradlePluginPortal()
+    }
 
-  dependencies {
-    classpath "com.github.ben-manes:gradle-versions-plugin:0.38.0"
-    classpath "se.patrikerdes:gradle-use-latest-versions-plugin:0.2.16"
-  }
+    dependencies {
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.28.0'
+        classpath "se.patrikerdes:gradle-use-latest-versions-plugin:0.2.13"
+    }
 }
 
-subprojects {
-  apply plugin: com.github.benmanes.gradle.versions.VersionsPlugin
-  apply plugin: se.patrikerdes.UseLatestVersionsPlugin
 
-  tasks.named("dependencyUpdates").configure {
-    resolutionStrategy {
+subprojects {
+    apply plugin: com.github.benmanes.gradle.versions.VersionsPlugin
+    apply plugin: se.patrikerdes.UseLatestVersionsPlugin
+
+    dependencyUpdates.resolutionStrategy {
       componentSelection { rules ->
         rules.all { ComponentSelection selection ->
           boolean rejected = ['alpha', 'beta', 'rc', 'cr', 'm', 'preview', 'b', 'ea', 'pr'].any { qualifier ->
@@ -45,5 +43,4 @@ subprojects {
         }
       }
     }
-  }
 }
