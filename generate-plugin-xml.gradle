@@ -117,8 +117,7 @@ project.afterEvaluate {
 
       test {
         java {
-          compileClasspath += configurations.compileOnly
-          runtimeClasspath += configurations.compileOnly
+          runtimeClasspath += configurations.compileClasspath
         }
       }
     }
