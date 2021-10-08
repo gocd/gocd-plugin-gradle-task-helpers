@@ -32,7 +32,7 @@ buildscript {
   dependencies {
     classpath localGroovy()
     classpath 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
-    classpath 'com.github.jk1:gradle-license-report:1.16'
+    classpath "com.github.jk1:gradle-license-report:${gradle.gradleVersion < '7' ? '1.17' : '2.0'}"
   }
 }
 
