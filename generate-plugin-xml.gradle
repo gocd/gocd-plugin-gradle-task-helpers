@@ -114,6 +114,9 @@ project.afterEvaluate {
         }
       }
 
+      processResources {
+        dependsOn generateResources
+      }
 
       test {
         java {
