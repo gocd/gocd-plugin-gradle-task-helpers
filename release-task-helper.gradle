@@ -46,7 +46,7 @@ class GitHubRepository {
 class Report {
   String outputDir
   List<Project> projects
-  List<String> configurations = ["compile"]
+  List<String> configurations = ["runtimeClasspath"]
   List<String> excludeGroups = []
   List<String> excludes = []
   boolean excludeOwnGroup = true
@@ -309,7 +309,7 @@ class GoCDPlugin implements Plugin<Project> {
     pluginProject.tasks.assemble.dependsOn("checkLicense")
     pluginProject.extensions.licenseReport.outputDir = gocdPluginExtension.licenseReport.outputDir ?: "$project.rootDir/build/license"
     pluginProject.extensions.licenseReport.projects = gocdPluginExtension.licenseReport.projects ?: project.allprojects
-    pluginProject.extensions.licenseReport.configurations = gocdPluginExtension.licenseReport.configurations ?: ["compile"]
+    pluginProject.extensions.licenseReport.configurations = gocdPluginExtension.licenseReport.configurations ?: ["runtimeClasspath"]
     pluginProject.extensions.licenseReport.excludeGroups = gocdPluginExtension.licenseReport.excludeGroups
     pluginProject.extensions.licenseReport.excludeOwnGroup = gocdPluginExtension.licenseReport.excludeOwnGroup
     pluginProject.extensions.licenseReport.excludes = gocdPluginExtension.licenseReport.excludes
