@@ -322,7 +322,6 @@ class GoCDPlugin implements Plugin<Project> {
 
     project.allprojects*.tasks*.findByName('jar').findAll { jar ->
       if (jar == null) return
-      jar.dependsOn("checkLicense")
       jar.into('license-report') {
         from "$pluginProject.extensions.licenseReport.outputDir/THIRD-PARTY-NOTICES.txt"
       }
