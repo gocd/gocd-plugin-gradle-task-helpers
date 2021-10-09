@@ -50,6 +50,7 @@ class Report {
   List<String> excludeGroups = []
   List<String> excludes = []
   boolean excludeOwnGroup = true
+  boolean excludeBoms = true
   def importers = []
 }
 
@@ -312,6 +313,7 @@ class GoCDPlugin implements Plugin<Project> {
     pluginProject.extensions.licenseReport.configurations = gocdPluginExtension.licenseReport.configurations ?: ["runtimeClasspath"]
     pluginProject.extensions.licenseReport.excludeGroups = gocdPluginExtension.licenseReport.excludeGroups
     pluginProject.extensions.licenseReport.excludeOwnGroup = gocdPluginExtension.licenseReport.excludeOwnGroup
+    pluginProject.extensions.licenseReport.excludeBoms = gocdPluginExtension.licenseReport.excludeBoms
     pluginProject.extensions.licenseReport.excludes = gocdPluginExtension.licenseReport.excludes
     pluginProject.extensions.licenseReport.renderers = [new TextReportRenderer()]
     pluginProject.extensions.licenseReport.importers = gocdPluginExtension.licenseReport.importers
