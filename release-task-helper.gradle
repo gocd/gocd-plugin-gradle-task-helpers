@@ -308,7 +308,7 @@ class GoCDPlugin implements Plugin<Project> {
   private void initializeLicenseReporting(GoCDPluginExtension gocdPluginExtension, Project project) {
     Project pluginProject = gocdPluginExtension.pluginProject
     pluginProject.tasks.assemble.dependsOn("checkLicense")
-    pluginProject.extensions.licenseReport.outputDir = gocdPluginExtension.licenseReport.outputDir ?: "$project.rootDir/build/license"
+    pluginProject.extensions.licenseReport.outputDir = gocdPluginExtension.licenseReport.outputDir ?: "$project.buildDir/license"
     pluginProject.extensions.licenseReport.projects = gocdPluginExtension.licenseReport.projects ?: project.allprojects
     pluginProject.extensions.licenseReport.configurations = gocdPluginExtension.licenseReport.configurations ?: ["runtimeClasspath"]
     pluginProject.extensions.licenseReport.excludeGroups = gocdPluginExtension.licenseReport.excludeGroups
@@ -320,8 +320,9 @@ class GoCDPlugin implements Plugin<Project> {
     pluginProject.extensions.licenseReport.filters = new LicenseBundleNormalizer(bundlePath: project.rootProject.licenseNormalizerBundle)
     pluginProject.extensions.licenseReport.allowedLicensesFile = project.rootProject.defaultAllowedLicenses
 
-    project.allprojects*.tasks*.findByName('jar').findAll { jar ->
+    project.gocdPlugin.assetsToRelease.findAll { jar ->
       if (jar == null) return
+      jar.dependsOn jar.project.tasks.named('generateLicenseReport')
       jar.into('license-report') {
         from "$pluginProject.extensions.licenseReport.outputDir/THIRD-PARTY-NOTICES.txt"
       }
