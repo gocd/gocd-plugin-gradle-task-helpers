@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-
-import com.github.jk1.license.filter.*
-import com.github.jk1.license.render.*
 import groovy.json.JsonSlurper
 import groovyx.net.http.ContentType
 import groovyx.net.http.HTTPBuilder
