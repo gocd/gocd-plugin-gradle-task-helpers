@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ThoughtWorks, Inc.
+ * Copyright 2023 Thoughtworks, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ private static String xmlTemplate(Project project) {
 
   return """
     <!--
-      ~ Copyright ${java.time.Year.now().getValue()} ThoughtWorks, Inc.
+      ~ Copyright ${java.time.Year.now().getValue()} Thoughtworks, Inc.
       ~
       ~ Licensed under the Apache License, Version 2.0 (the "License");
       ~ you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ private static String pluginProperties(Project project) {
   def gocdPlugin = project.gocdPlugin
   return """
     #
-    # Copyright ${java.time.Year.now().getValue()} ThoughtWorks, Inc.
+    # Copyright ${java.time.Year.now().getValue()} Thoughtworks, Inc.
     #
     # Licensed under the Apache License, Version 2.0 (the "License");
     # you may not use this file except in compliance with the License.

@@ -19,7 +19,7 @@ gocdPlugin {
     goCdVersion = '19.3.0'
     name = 'GoCD Flux Capacitor plugin'
     description = 'Flux capacitors allow you to travel time'
-    vendorName = 'ThoughtWorks, Inc.'
+    vendorName = 'Thoughtworks, Inc.'
     vendorUrl = 'https://github.com/example/gocd-flux-capacitor-plugin'
 
     // specify what github repository to release to
