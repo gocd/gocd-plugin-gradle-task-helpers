@@ -75,6 +75,7 @@
     { "bundleName" : "LGPL-2.1-only", "licenseNamePattern" : "LGPL 2\\.1" },
     { "bundleName" : "MIT", "licenseNamePattern" : "(The\\s)?MIT(\\s[l|L]icen[c|s]e)?(\\s[(]MIT[)])?" },
     { "bundleName" : "MIT-0", "licenseNamePattern" : "(The\\s)?MIT No Attribution(\\s[l|L]icen[c|s]e)?(\\s[(]MIT[-]?0[)])?" },
+    { "bundleName" : "MIT-0", "licenseNamePattern" : "MIT[ -]?0(\\s[l|L]icen[c|s]e)?" },
     { "bundleName" : "MPL-1.1", "licenseNamePattern" : "MPL 1\\.1" },
     { "bundleName" : "Public-Domain", "licenseNamePattern" : "(([p|P]ublic|PUBLIC)\\s([d|D]omain|DOMAIN)).*", "transformUrl" : false },
     { "bundleName" : "Public-Domain", "licenseFileContentPattern" : ".*([c|C]reative|CREATIVE)\\s([c|C]ommons|COMMONS).*", "transformUrl" : false },
