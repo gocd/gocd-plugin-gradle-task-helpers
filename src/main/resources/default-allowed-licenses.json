@@ -1,0 +1,40 @@
+{
+  "allowedLicenses": [
+    {
+      "moduleLicense": "^BSD$"
+    },
+    {
+      "moduleLicense": "^The 3-Clause BSD License$"
+    },
+    {
+      "moduleLicense": "^The 2-Clause BSD License$"
+    },
+    {
+      "moduleLicense": "Apache License, Version 2.0"
+    },
+    {
+      "moduleLicense": "MIT License"
+    },
+    {
+      "moduleLicense": "GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1"
+    },
+    {
+      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL), Version 1.0"
+    },
+    {
+      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL), Version 1.1"
+    },
+    {
+      "moduleLicense": "Bouncy Castle Licence"
+    },
+    {
+      "moduleLicense": "EDL 1.0"
+    },
+    {
+      "moduleLicense": "Eclipse Distribution License - v 1.0"
+    },
+    {
+      "moduleLicense": "Eclipse Public License - v 2.0"
+    }
+  ]
+}
