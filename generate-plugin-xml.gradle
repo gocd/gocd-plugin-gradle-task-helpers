@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-private static String xmlTemplate(Project project) {
-  def gocdPlugin = project.gocdPlugin
-
+private static String xmlTemplate(gocdPlugin, version) {
   def targetOsSnippet = ""
 
   if (gocdPlugin.targetOs != null && !gocdPlugin.targetOs.isEmpty()) {
@@ -46,7 +44,7 @@ private static String xmlTemplate(Project project) {
     <go-plugin id="${gocdPlugin.id}" version="1">
       <about>
         <name>${gocdPlugin.name}</name>
-        <version>${project.version}</version>
+        <version>${version}</version>
         <target-go-version>${gocdPlugin.goCdVersion}</target-go-version>
         <description>${gocdPlugin.description}</description>
         <vendor>
@@ -59,8 +57,7 @@ private static String xmlTemplate(Project project) {
     """.stripIndent().trim()
 }
 
-private static String pluginProperties(Project project) {
-  def gocdPlugin = project.gocdPlugin
+private static String pluginProperties(gocdPlugin, version) {
   return """
     #
     # Copyright ${java.time.Year.now().getValue()} ${gocdPlugin.vendorName}
@@ -80,12 +77,17 @@ private static String pluginProperties(Project project) {
 
     id=${gocdPlugin.id}
     name=${gocdPlugin.name}
-    version=${project.version}
+    version=${version}
     goCdVersion=${gocdPlugin.goCdVersion}
     description=${gocdPlugin.description}
     vendorName=${gocdPlugin.vendorName}
     vendorUrl=${gocdPlugin.vendorUrl}
   """.stripIndent().trim()
+}
+
+interface InjectedExecOps {
+    @Inject //@javax.inject.Inject
+    ExecOperations getExecOps()
 }
 
 project.afterEvaluate {
@@ -102,15 +104,18 @@ project.afterEvaluate {
 
 
       pluginProject.tasks.create('generateResources') { thisTask ->
+        def injected = project.objects.newInstance(InjectedExecOps)
         thisTask.outputs.upToDateWhen {false}
         outputs.dir(generatedResourcesOutput)
 
         doFirst {
-          project.delete(generatedResourcesOutput)
+          injected.execOps.exec {
+            commandLine 'rm', '-rf', generatedResourcesOutput
+          }
           generatedResourcesOutput.mkdirs()
 
-          new File(generatedResourcesOutput, "plugin.xml").setText(xmlTemplate(project), "utf-8")
-          new File(generatedResourcesOutput, "plugin.properties").setText(pluginProperties(project), "utf-8")
+          new File(generatedResourcesOutput, "plugin.xml").setText(xmlTemplate(pluginProject.gocdPlugin, pluginProject.version), "utf-8")
+          new File(generatedResourcesOutput, "plugin.properties").setText(pluginProperties(pluginProject.gocdPlugin, pluginProject.version), "utf-8")
         }
       }
 
