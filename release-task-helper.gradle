@@ -265,7 +265,7 @@ class ReleaseTask extends ReleaseHelperTask {
 }
 
 project.rootProject.ext.defaultAllowedLicenses = writeTempFile("./default-allowed-licenses.json")
-project.rootProject.ext.licenseNormalizerBundle = writeTempFile("./license-normalizer-bundle.json")
+project.rootProject.ext.licenseNormalizerBundle = writeTempFile("./normalizing-licenses-bundle.json")
 
 class GoCDPlugin implements Plugin<Project> {
   void apply(Project project) {

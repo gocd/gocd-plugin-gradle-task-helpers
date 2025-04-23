@@ -60,7 +60,7 @@ allprojects {
 
 The license verification is via the `com.github.jk1:gradle-license-report` dependency. The following files are being utilized:
 
-1. The `license-normalizer-bundle.json` normalizes a range of license based on a `name`, `url` or `file-content` pattern. The resulting license name should always be a standard name. See [this](https://spdx.org/licenses/) for the list of standard licenses.
+1. The `normalizing-licenses-bundle.json` normalizes a range of license based on a `name`, `url` or `file-content` pattern. The resulting license name should always be a standard name. See [this](https://spdx.org/licenses/) for the list of standard licenses.
 
 2. The `default-allowed-licenses.json` contains the list of license names (standard names) after the normalization that are allowed to be a part of the plugin. Any plugin not supporting one of these will break the build and an exception will be thrown regarding the same.
 
