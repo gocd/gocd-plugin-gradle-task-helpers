@@ -37,7 +37,7 @@ allprojects {
 
     testLogging {
       def previousFailed = false
-      exceptionFormat 'full'
+      exceptionFormat = 'full'
 
       beforeSuite { suite ->
         if (suite.name.startsWith("Test Run") || suite.name.startsWith("Gradle Worker")) return

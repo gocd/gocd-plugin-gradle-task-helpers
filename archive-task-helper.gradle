@@ -18,8 +18,8 @@ allprojects { eachProject ->
   eachProject.afterEvaluate {
     // generate checksums for all archives
     tasks.withType(AbstractArchiveTask) { archiveTask ->
-      includeEmptyDirs false
-      duplicatesStrategy DuplicatesStrategy.EXCLUDE
+      includeEmptyDirs = false
+      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
       preserveFileTimestamps = false
       reproducibleFileOrder = true
@@ -39,10 +39,10 @@ allprojects { eachProject ->
           attributes(
             'Go-Version': rootProject.extensions.gocdPlugin.goCdVersion,
             'Plugin-Revision': rootProject.extensions.gocdPlugin.pluginVersion,
-            'Implementation-Title': project.name,
-            'Implementation-Version': project.version,
-            'Source-Compatibility': project.java.sourceCompatibility,
-            'Target-Compatibility': project.java.targetCompatibility,
+            'Implementation-Title': eachProject.name,
+            'Implementation-Version': eachProject.version,
+            'Source-Compatibility': eachProject.java.sourceCompatibility,
+            'Target-Compatibility': eachProject.java.targetCompatibility,
             'Git-SHA': rootProject.git.gitRevision(),
           )
         }
