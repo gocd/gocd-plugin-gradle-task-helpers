@@ -1,0 +1,15 @@
+final Map<String, String> libraries = [
+    // Dependabot will parse these dependencies.
+    // Keep all of these as uninterpolated string literals so that Dependabot can parse the versions and create PRs for
+    // upgrades.
+    //
+    // DO NOT interpolate version variables here because Dependabot is not smart enough to understand those. Dependabot's
+    // version parsing is simply regex matching and never actually evaluates a gradle script.
+    gradleLicenseReport: 'com.github.jk1:gradle-license-report:2.9',
+    httpBuilder        : 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1',
+]
+
+ext {
+    //noinspection GroovyAssignabilityCheck
+    deps = libraries
+}

@@ -47,6 +47,7 @@ task allDependencies {
     description = "Print dependency tree of all projects"
 }
 
+apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./dependencies.gradle")
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./version-helper.gradle")
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./generate-plugin-xml.gradle")
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./archive-task-helper.gradle")
