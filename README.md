@@ -10,7 +10,7 @@ In your root project's `build.gradle` file add the following line:
 // use the master (with a query param to bust cache every 60 seconds)
 apply from: "https://raw.githubusercontent.com/gocd/gocd-plugin-gradle-task-helpers/master/helper.gradle?_=${(int) (new Date().toInstant().epochSecond / 60)}"
 // OR use a specific sha
-apply from: 'https://raw.githubusercontent.com/gocd/gradle-task-helpers/GIT_COMMITISH/helper.gradle'
+apply from: 'https://raw.githubusercontent.com/gocd/gocd-plugin-gradle-task-helpers/GIT_COMMITISH/helper.gradle'
 
 // specify plugin details
 gocdPlugin {
