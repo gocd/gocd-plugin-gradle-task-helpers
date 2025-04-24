@@ -31,8 +31,8 @@ buildscript {
 
   dependencies {
     classpath localGroovy()
-    classpath project.deps.httpBuilder
-    classpath project.deps.gradleLicenseReport
+    classpath project.taskHelperDeps.httpBuilder
+    classpath project.taskHelperDeps.gradleLicenseReport
   }
 }
 

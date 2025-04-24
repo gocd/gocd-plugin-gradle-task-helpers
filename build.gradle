@@ -11,5 +11,5 @@ final Map<String, String> libraries = [
 
 ext {
     //noinspection GroovyAssignabilityCheck
-    deps = libraries
+    taskHelperDeps = libraries
 }
