@@ -85,6 +85,11 @@ private static String pluginProperties(gocdPlugin, version) {
   """.stripIndent().trim()
 }
 
+interface InjectedExecOps {
+    @Inject //@javax.inject.Inject
+    ExecOperations getExecOps()
+}
+
 project.afterEvaluate {
   project.gocdPlugin.pluginProject.with { Project pluginProject ->
     def generatedResourcesOutput = pluginProject.file("src/main/resources-generated")

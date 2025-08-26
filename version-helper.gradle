@@ -44,6 +44,11 @@ static String getLastTag(boolean isExperimental) {
     }
 }
 
+interface InjectedExecOps {
+    @Inject //@javax.inject.Inject
+    ExecOperations getExecOps()
+}
+
 String getCommitsSinceLastTag(String from) {
     def injected = project.objects.newInstance(InjectedExecOps)
     def hashStdOut = new ByteArrayOutputStream()

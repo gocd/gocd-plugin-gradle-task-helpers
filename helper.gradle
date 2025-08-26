@@ -47,11 +47,6 @@ task allDependencies {
     description = "Print dependency tree of all projects"
 }
 
-interface InjectedExecOps {
-    @Inject //@javax.inject.Inject
-    ExecOperations getExecOps()
-}
-
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./build.gradle")
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./version-helper.gradle")
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./generate-plugin-xml.gradle")
