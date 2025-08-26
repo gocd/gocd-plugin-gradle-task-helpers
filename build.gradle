@@ -6,7 +6,6 @@ final Map<String, String> libraries = [
     // DO NOT interpolate version variables here because Dependabot is not smart enough to understand those. Dependabot's
     // version parsing is simply regex matching and never actually evaluates a gradle script.
     gradleLicenseReport: 'com.github.jk1:gradle-license-report:2.9',
-    httpBuilder        : 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1',
 ]
 
 ext {
