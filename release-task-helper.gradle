@@ -79,8 +79,9 @@ class GoCDPluginExtension {
     licenseReport = objectFactory.newInstance(Report)
   }
 
-  String fullVersion(Project project) {
-    project.git.distVersion() ? "${pluginVersion}-${project.git.distVersion()}" : pluginVersion
+  String fullVersion(Object projectOrGit) {
+    def git = projectOrGit instanceof Project ? projectOrGit.ext.git : projectOrGit
+    git.distVersion() ? "${pluginVersion}-${git.distVersion()}" : pluginVersion
   }
 
   void githubRepo(Action<? super GitHubRepository> action) {
@@ -96,6 +97,8 @@ abstract class ReleaseHelperTask extends DefaultTask {
   @Internal final String HEADER_USER_AGENT = 'gocd-gradle-github-release-plugin'
   @Internal final String GITHUB_API_BASE_URL = "https://api.github.com"
   @Internal final String GITHUB_API_ACCEPT_HEADER = "application/vnd.github.v3+json"
+  @Input GoCDPluginExtension gocdPlugin = project.extensions.gocdPlugin
+  @Input Object git = project.extensions.extraProperties.git
 
   protected static HTTPBuilder createHttpBuilder(url) {
     def http = new HTTPBuilder(url)
@@ -113,8 +116,7 @@ abstract class ReleaseHelperTask extends DefaultTask {
 class VerifyExpRelease extends ReleaseHelperTask {
   @TaskAction
   verify() {
-    GoCDPluginExtension gocdPlugin = project.gocdPlugin
-    def tagName = "v${gocdPlugin.fullVersion(project)}-exp".toString()
+    def tagName = "v${gocdPlugin.fullVersion(git)}-exp".toString()
     def path = "/repos/${project.gocdPlugin.githubRepo.owner}/${project.gocdPlugin.githubRepo.repo}/releases/tags/${tagName}"
 
     def http = createHttpBuilder(GITHUB_API_BASE_URL)
@@ -153,27 +155,25 @@ class VerifyExpRelease extends ReleaseHelperTask {
 class ReleaseTask extends ReleaseHelperTask {
   @TaskAction
   release() {
-    GoCDPluginExtension gocdPlugin = project.gocdPlugin
+    def sha256Sums = gocdPlugin.assetsToRelease*.outputs*.files*.files.flatten().findAll { File it -> it.name.matches(".*\\.(SHA-256|SHA256)") }
 
-    def sha256Sums = project.gocdPlugin.assetsToRelease*.outputs*.files*.files.flatten().findAll { File it -> it.name.matches(".*\\.(SHA-256|SHA256)") }
+    def path = "/repos/${gocdPlugin.githubRepo.owner}/${gocdPlugin.githubRepo.repo}/releases"
 
-    def path = "/repos/${project.gocdPlugin.githubRepo.owner}/${project.gocdPlugin.githubRepo.repo}/releases"
-
-    def lastCommit = project.git.gitRevision()
-    def lastTag = project.git.getLastTag(project.extensions.gocdPlugin.prerelease)
+    def lastCommit = git.gitRevision()
+    def lastTag = git.getLastTag(gocdPlugin.prerelease)
     def changelogHeader = lastTag ? "### Changelog ${lastTag}..${lastCommit.substring(0, 7)}" : "### Changelog"
-    def changeLog = project.git.getCommitsSinceLastTag(lastTag).replaceAll("\"", "")
-    def supportedGoCDVersionNote = "**Note:** *Supported GoCD server version: ${project.gocdPlugin.goCdVersion} or above.*"
+    def changeLog = git.getCommitsSinceLastTag(lastTag).replaceAll("\"", "")
+    def supportedGoCDVersionNote = "**Note:** *Supported GoCD server version: ${gocdPlugin.goCdVersion} or above.*"
     def checksumNote = """**SHA256 Checksums**\n```\n${
       sha256Sums.collect({ File eachFile -> eachFile.getText("utf-8").trim() }).join("\n")
     }\n```""".trim()
-    def tagName = project.extensions.gocdPlugin.prerelease ? "${gocdPlugin.fullVersion(project)}-exp" : gocdPlugin.fullVersion(project)
+    def tagName = gocdPlugin.prerelease ? "${gocdPlugin.fullVersion(git)}-exp" : gocdPlugin.fullVersion(git)
 
 
     def postBody = [
       tag_name        : "v${tagName}".toString(),
-      target_commitish: project.git.gitRevision().toString(),
-      name            : "${project.extensions.gocdPlugin.prerelease ? 'Experimental: ' : ''}${gocdPlugin.fullVersion(project)}".toString(),
+      target_commitish: git.gitRevision().toString(),
+      name            : "${gocdPlugin.prerelease ? 'Experimental: ' : ''}${gocdPlugin.fullVersion(git)}".toString(),
       body            : """\n$changelogHeader\n\n${changeLog}\n\n${
         supportedGoCDVersionNote
         checksumNote
@@ -188,7 +188,7 @@ class ReleaseTask extends ReleaseHelperTask {
       body = postBody
 
       headers['User-Agent'] = HEADER_USER_AGENT
-      headers['Authorization'] = "token ${project.gocdPlugin.githubRepo.token}"
+      headers['Authorization'] = "token ${gocdPlugin.githubRepo.token}"
       headers['Accept'] = GITHUB_API_ACCEPT_HEADER
 
       def postLogMessage = "POST ${uri.path}\n" +
@@ -218,7 +218,7 @@ class ReleaseTask extends ReleaseHelperTask {
   }
 
   def postAssets(String uploadUrl) {
-    project.gocdPlugin.assetsToRelease.each { Task assetTask ->
+    gocdPlugin.assetsToRelease.each { Task assetTask ->
 
       assetTask.outputs.files.forEach { File file ->
         def name = file.name
@@ -245,7 +245,7 @@ class ReleaseTask extends ReleaseHelperTask {
             send ContentType.BINARY, file.bytes
 
             headers['User-Agent'] = HEADER_USER_AGENT
-            headers['Authorization'] = "token ${project.gocdPlugin.githubRepo.token}"
+            headers['Authorization'] = "token ${gocdPlugin.githubRepo.token}"
             headers['Accept'] = GITHUB_API_ACCEPT_HEADER
             headers['Content-Type'] = contentType
 
@@ -305,23 +305,23 @@ class GoCDPlugin implements Plugin<Project> {
     }
   }
 
-  private void initializeLicenseReporting(GoCDPluginExtension gocdPluginExtension, Project project) {
-    Project pluginProject = gocdPluginExtension.pluginProject
+  private void initializeLicenseReporting(GoCDPluginExtension gocdPlugin, Project project) {
+    Project pluginProject = gocdPlugin.pluginProject
     pluginProject.tasks.assemble.dependsOn("checkLicense")
-    project.extensions.licenseReport.outputDir = gocdPluginExtension.licenseReport.outputDir ?: "$project.buildDir/license"
-    pluginProject.extensions.licenseReport.outputDir = gocdPluginExtension.licenseReport.outputDir ?: "$project.buildDir/license"
-    pluginProject.extensions.licenseReport.projects = gocdPluginExtension.licenseReport.projects ?: project.allprojects
-    pluginProject.extensions.licenseReport.configurations = gocdPluginExtension.licenseReport.configurations ?: ["runtimeClasspath"]
-    pluginProject.extensions.licenseReport.excludeGroups = gocdPluginExtension.licenseReport.excludeGroups
-    pluginProject.extensions.licenseReport.excludeOwnGroup = gocdPluginExtension.licenseReport.excludeOwnGroup
-    pluginProject.extensions.licenseReport.excludeBoms = gocdPluginExtension.licenseReport.excludeBoms
-    pluginProject.extensions.licenseReport.excludes = gocdPluginExtension.licenseReport.excludes
+    project.extensions.licenseReport.outputDir = gocdPlugin.licenseReport.outputDir ?: "$project.buildDir/license"
+    pluginProject.extensions.licenseReport.outputDir = gocdPlugin.licenseReport.outputDir ?: "$project.buildDir/license"
+    pluginProject.extensions.licenseReport.projects = gocdPlugin.licenseReport.projects ?: project.allprojects
+    pluginProject.extensions.licenseReport.configurations = gocdPlugin.licenseReport.configurations ?: ["runtimeClasspath"]
+    pluginProject.extensions.licenseReport.excludeGroups = gocdPlugin.licenseReport.excludeGroups
+    pluginProject.extensions.licenseReport.excludeOwnGroup = gocdPlugin.licenseReport.excludeOwnGroup
+    pluginProject.extensions.licenseReport.excludeBoms = gocdPlugin.licenseReport.excludeBoms
+    pluginProject.extensions.licenseReport.excludes = gocdPlugin.licenseReport.excludes
     pluginProject.extensions.licenseReport.renderers = [new TextReportRenderer()]
-    pluginProject.extensions.licenseReport.importers = gocdPluginExtension.licenseReport.importers
+    pluginProject.extensions.licenseReport.importers = gocdPlugin.licenseReport.importers
     pluginProject.extensions.licenseReport.filters = new LicenseBundleNormalizer(bundlePath: project.rootProject.licenseNormalizerBundle)
     pluginProject.extensions.licenseReport.allowedLicensesFile = project.rootProject.defaultAllowedLicenses
 
-    project.gocdPlugin.assetsToRelease.findAll { jar ->
+    gocdPlugin.assetsToRelease.findAll { jar ->
       if (jar == null) return
       jar.dependsOn jar.project.tasks.named('generateLicenseReport')
       jar.into('license-report') {
