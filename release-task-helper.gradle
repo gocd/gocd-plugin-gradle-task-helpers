@@ -207,13 +207,9 @@ class ReleaseTask extends ReleaseHelperTask {
         def upload = uploadUrl.replace('{?name,label}', "?name=${name}&label=${name}")
         logger.debug "upload url: ${upload}"
 
-        def url = new URL(upload as String)
-        def host = url.host + (url.port > 0 ? ":" + url.port + "" : "")
-        host = "${url.protocol}://${host}"
-
         if (file.exists()) {
 
-          ((HttpURLConnection) url.openConnection()).with({
+          ((HttpURLConnection) new URL(upload).openConnection()).with({
             requestMethod = 'POST'
             doOutput = true
             setRequestProperty('User-Agent', HEADER_USER_AGENT)
