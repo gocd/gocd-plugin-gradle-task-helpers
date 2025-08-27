@@ -17,6 +17,7 @@
 
 import com.github.jk1.license.filter.*
 import com.github.jk1.license.render.*
+import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 
 buildscript {
@@ -99,7 +100,7 @@ abstract class ReleaseHelperTask extends DefaultTask {
     logger.error "Error in $logMessage"
     logger.info 'Response headers: \n' + connection.headerFields.collect { "< $it" }.join('\n')
     logger.info result
-    new GradleScriptException("Error while fetching experimental release: ${connection.responseMessage}. Result = $result", cause)
+    new GradleScriptException("Error while creating release: ${connection.responseMessage}. Result = $result", cause)
   }
 }
 
@@ -115,19 +116,19 @@ class VerifyExpRelease extends ReleaseHelperTask {
       setRequestProperty('Authorization', "token ${gocdPlugin.githubRepo.token}")
       setRequestProperty('Accept', GITHUB_API_ACCEPT_HEADER)
 
-      def postLogMessage = "GET ${url}\n" +
+      def logMessage = "GET ${url}\n" +
         " > User-Agent: ${getRequestProperty('User-Agent')}\n" +
         " > Authorization: (not shown)\n" +
         " > Accept: ${getRequestProperty('Accept')}\n"
-      logger.debug "$postLogMessage"
+      logger.debug "$logMessage"
 
       try {
         def result = inputStream.text
         if (responseCode != 200) {
-          throw handleHttpError(it, postLogMessage, result)
+          throw handleHttpError(it, logMessage, result)
         }
       } catch (Exception e) {
-        throw handleHttpError(it, postLogMessage, null, e)
+        throw handleHttpError(it, logMessage, null, e)
       }
     })
   }
@@ -162,40 +163,39 @@ class ReleaseTask extends ReleaseHelperTask {
       prerelease      : gocdPlugin.prerelease
     ]
 
-    def http = createHttpBuilder(GITHUB_API_BASE_URL)
-    http.request(Method.POST) {
-      uri.path += path
-      requestContentType = ContentType.JSON
-      body = postBody
+    ((HttpURLConnection) new URL(GITHUB_API_BASE_URL + path).openConnection()).with({
+      requestMethod = 'POST'
+      doOutput = true
+      setRequestProperty('User-Agent', HEADER_USER_AGENT)
+      setRequestProperty('Authorization', "token ${gocdPlugin.githubRepo.token}")
+      setRequestProperty('Accept', GITHUB_API_ACCEPT_HEADER)
+      setRequestProperty('Content-Type', 'application/json')
 
-      headers['User-Agent'] = HEADER_USER_AGENT
-      headers['Authorization'] = "token ${gocdPlugin.githubRepo.token}"
-      headers['Accept'] = GITHUB_API_ACCEPT_HEADER
+      def body = new JsonBuilder(postBody).toString()
+      outputStream.withWriter("UTF-8") { writer -> writer << body }
 
-      def postLogMessage = "POST ${uri.path}\n" +
-        " > User-Agent: ${headers['User-Agent']}\n" +
+      def logMessage = "POST ${url}\n" +
+        " > User-Agent: ${getRequestProperty('User-Agent')}\n" +
         " > Authorization: (not shown)\n" +
-        " > Accept: ${headers.Accept}\n" +
+        " > Accept: ${getRequestProperty('Accept')}\n" +
         " > body: $body\n"
-      logger.debug "$postLogMessage"
+      logger.debug "$logMessage"
 
-      response.success = { resp, json ->
-        logger.debug "< $resp.statusLine"
-        logger.debug 'Response headers: \n' + resp.headers.collect { "< $it" }.join('\n')
-        if (gocdPlugin.assetsToRelease != null) {
-          postAssets(json.upload_url)
+      def result
+      try {
+        result = inputStream.text
+        if (responseCode >= 300) {
+          throw handleHttpError(it, logMessage, result)
         }
+      } catch (Exception e) {
+        throw handleHttpError(it, logMessage, null, e)
       }
 
-      response.failure = { resp, json ->
-        logger.error "Error in $postLogMessage"
-        logger.debug 'Response headers: \n' + resp.headers.collect { "< $it" }.join('\n')
-        def errorMessage = json ? json.message : resp.statusLine
-        def ref = json ? "See $json.documentation_url" : ''
-        def errorDetails = json && json.errors ? "Details: " + json.errors.collect { it }.join('\n') : ''
-        throw new GradleScriptException("$errorMessage. $ref. $errorDetails", null)
+      if (gocdPlugin.assetsToRelease != null) {
+        def json = new JsonSlurper().parseText(result)
+        postAssets(json.upload_url)
       }
-    }
+    })
   }
 
   def postAssets(String uploadUrl) {
@@ -210,35 +210,39 @@ class ReleaseTask extends ReleaseHelperTask {
         def url = new URL(upload as String)
         def host = url.host + (url.port > 0 ? ":" + url.port + "" : "")
         host = "${url.protocol}://${host}"
-        def path = url.path
-        def http = createHttpBuilder(host)
 
         if (file.exists()) {
           def map = URLConnection.getFileNameMap()
           def contentType = map.getContentTypeFor(file.absolutePath)
 
-          http.ignoreSSLIssues()
-          http.request(Method.POST) { req ->
-            uri.path = path
-            uri.query = [
-              name: name,
-            ]
-            send ContentType.BINARY, file.bytes
+          ((HttpURLConnection) url.openConnection()).with({
+            requestMethod = 'POST'
+            doOutput = true
+            setRequestProperty('User-Agent', HEADER_USER_AGENT)
+            setRequestProperty('Authorization', "token ${gocdPlugin.githubRepo.token}")
+            setRequestProperty('Accept', GITHUB_API_ACCEPT_HEADER)
+            setRequestProperty('Content-Type', 'application/octet-stream')
 
-            headers['User-Agent'] = HEADER_USER_AGENT
-            headers['Authorization'] = "token ${gocdPlugin.githubRepo.token}"
-            headers['Accept'] = GITHUB_API_ACCEPT_HEADER
-            headers['Content-Type'] = contentType
+            outputStream.withStream { os -> os << file.bytes }
 
+            def logMessage = "POST ${url}\n" +
+              " > User-Agent: ${getRequestProperty('User-Agent')}\n" +
+              " > Authorization: (not shown)\n" +
+              " > Accept: ${getRequestProperty('Accept')}\n" +
+              " > Content-Type: $contentType\n"
 
-            response.success = { resp, json ->
-              logger.debug "$json"
+            try {
+              def result = inputStream.text
+              if (responseCode >= 300) {
+                throw handleHttpError(it, logMessage, result)
+              } else {
+                def json = new JsonSlurper().parseText(result)
+                logger.debug "$json"
+              }
+            } catch (Exception e) {
+              throw handleHttpError(it, logMessage, null, e)
             }
-
-            response.failure = { resp, json ->
-              logger.error "$json"
-            }
-          }
+          })
         }
       }
     }
