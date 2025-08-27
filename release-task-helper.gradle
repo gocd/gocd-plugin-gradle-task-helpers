@@ -212,8 +212,6 @@ class ReleaseTask extends ReleaseHelperTask {
         host = "${url.protocol}://${host}"
 
         if (file.exists()) {
-          def map = URLConnection.getFileNameMap()
-          def contentType = map.getContentTypeFor(file.absolutePath)
 
           ((HttpURLConnection) url.openConnection()).with({
             requestMethod = 'POST'
@@ -228,8 +226,7 @@ class ReleaseTask extends ReleaseHelperTask {
             def logMessage = "POST ${url}\n" +
               " > User-Agent: ${getRequestProperty('User-Agent')}\n" +
               " > Authorization: (not shown)\n" +
-              " > Accept: ${getRequestProperty('Accept')}\n" +
-              " > Content-Type: $contentType\n"
+              " > Accept: ${getRequestProperty('Accept')}\n"
 
             try {
               def result = inputStream.text
