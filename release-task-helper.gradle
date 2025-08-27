@@ -277,7 +277,7 @@ class GoCDPlugin implements Plugin<Project> {
       }
 
       project.tasks.register('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
-        thisTask.dependsOn project.allprojects*.tasks*.named('assemble').findAll { it != null }
+        thisTask.dependsOn project.allprojects*.tasks*.findByName('assemble').findAll { it != null }
       }
       project.tasks.register('verifyExpRelease', VerifyExpRelease)
     }
