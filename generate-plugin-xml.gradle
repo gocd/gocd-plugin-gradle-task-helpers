@@ -92,6 +92,8 @@ interface InjectedExecOps {
 
 project.afterEvaluate {
   project.gocdPlugin.pluginProject.with { Project pluginProject ->
+    if (pluginProject == null) return
+
     def generatedResourcesOutput = pluginProject.file("src/main/resources-generated")
 
     pluginProject.sourceSets {

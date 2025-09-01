@@ -290,9 +290,12 @@ class GoCDPlugin implements Plugin<Project> {
 
   private void initializeLicenseReporting(GoCDPluginExtension gocdPlugin, Project project) {
     Project pluginProject = gocdPlugin.pluginProject
+
+    if (pluginProject == null) return
+
     pluginProject.tasks.assemble.dependsOn("checkLicense")
-    project.extensions.licenseReport.outputDir = gocdPlugin.licenseReport.outputDir ?: "$project.buildDir/license"
-    pluginProject.extensions.licenseReport.outputDir = gocdPlugin.licenseReport.outputDir ?: "$project.buildDir/license"
+    project.extensions.licenseReport.outputDir = gocdPlugin.licenseReport.outputDir ?: "${project.layout.buildDirectory.get()}/license"
+    pluginProject.extensions.licenseReport.outputDir = gocdPlugin.licenseReport.outputDir ?: "${project.layout.buildDirectory.get()}/license"
     pluginProject.extensions.licenseReport.projects = gocdPlugin.licenseReport.projects ?: project.allprojects
     pluginProject.extensions.licenseReport.configurations = gocdPlugin.licenseReport.configurations ?: ["runtimeClasspath"]
     pluginProject.extensions.licenseReport.excludeGroups = gocdPlugin.licenseReport.excludeGroups
