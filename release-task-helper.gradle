@@ -139,6 +139,11 @@ class ReleaseTask extends ReleaseHelperTask {
   release() {
     def sha256Sums = gocdPlugin.assetsToRelease*.outputs*.files*.files.flatten().findAll { File it -> it.name.matches(".*\\.(SHA-256|SHA256)") }
 
+    if (sha256Sums.empty) {
+      logger.debug "No assets to release, skipping release."
+      return
+    }
+
     def path = "/repos/${gocdPlugin.githubRepo.owner}/${gocdPlugin.githubRepo.repo}/releases"
 
     def lastCommit = git.gitRevision()
