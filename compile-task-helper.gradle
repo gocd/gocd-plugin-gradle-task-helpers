@@ -16,6 +16,7 @@
 
 allprojects {
   tasks.withType(JavaCompile) {
+    options.release = 11
     options.deprecation = true
     options.debug = true
     options.warnings = false

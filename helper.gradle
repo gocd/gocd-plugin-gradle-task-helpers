@@ -35,8 +35,9 @@ if (System.getenv().containsKey("GO_SERVER_URL")) {
 subprojects {
     apply plugin: 'java'
 
-    tasks.withType(JavaCompile).configureEach {
-      options.release = 11
+    java {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
