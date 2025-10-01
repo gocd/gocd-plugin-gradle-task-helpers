@@ -41,8 +41,6 @@ allprojects { eachProject ->
             'Plugin-Revision': rootProject.extensions.gocdPlugin.pluginVersion,
             'Implementation-Title': eachProject.name,
             'Implementation-Version': eachProject.version,
-            'Source-Compatibility': eachProject.java.sourceCompatibility,
-            'Target-Compatibility': eachProject.java.targetCompatibility,
             'Git-SHA': rootProject.git.gitRevision(),
           )
         }
