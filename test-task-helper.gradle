@@ -32,7 +32,7 @@
 }
 
 allprojects {
-  tasks.withType(Test) {
+  tasks.withType(Test).configureEach {
     maxParallelForks = 1
 
     testLogging {
@@ -92,7 +92,7 @@ allprojects {
   }
 }
 
-private String summaryStyle(result) {
+private static String summaryStyle(result) {
   def summaryStyle = TestHelperANSI.COLOR.ANSI_WHITE
   switch (result.resultType) {
     case TestResult.ResultType.SUCCESS:
@@ -105,8 +105,8 @@ private String summaryStyle(result) {
   summaryStyle
 }
 
-private String resultIndicator(result) {
-  def indicator = TestHelperANSI.COLOR.ANSI_WHITE
+private static String resultIndicator(result) {
+  def indicator
 
   if (result.failedTestCount > 0) {
     indicator = TestHelperANSI.COLOR.ANSI_RED + TestHelperANSI.SYMBOLS.X_MARK

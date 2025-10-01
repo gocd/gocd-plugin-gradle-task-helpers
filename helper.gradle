@@ -15,36 +15,47 @@
  */
 
 if (System.getenv().containsKey("GO_SERVER_URL")) {
-    def separator = "=".multiply(72)
+  def separator = "=".multiply(72)
 
-    println separator
-    println "Gradle version:  ${gradle.gradleVersion}"
-    println "JVM:             ${System.getProperty('java.version')} (${System.getProperty('java.vm.vendor')} ${System.getProperty('java.vm.version')})"
-    println "OS:              ${System.getProperty('os.name')} ${System.getProperty('os.version')} ${System.getProperty('os.arch')}"
+  println separator
+  println "Gradle version:  ${gradle.gradleVersion}"
+  println "JVM:             ${System.getProperty('java.version')} (${System.getProperty('java.vm.vendor')} ${System.getProperty('java.vm.version')})"
+  println "OS:              ${System.getProperty('os.name')} ${System.getProperty('os.version')} ${System.getProperty('os.arch')}"
+  println separator
+  println("")
+
+  if (System.getenv().containsKey('DUMP_SYSTEM_ENV')) {
+    println("       JVM properties: ${System.getProperties()}");
+    println("Environment Variables: ${System.getenv()}");
     println separator
     println("")
-
-    if (System.getenv().containsKey('DUMP_SYSTEM_ENV')) {
-            println("       JVM properties: ${System.getProperties()}");
-            println("Environment Variables: ${System.getenv()}");
-            println separator
-            println("")
-    }
+  }
 }
 
 subprojects {
-    apply plugin: 'java'
+  apply plugin: 'java'
 
-    java {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
+  java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+  }
 }
 
-task allDependencies {
-    dependsOn allprojects.collect { "$it.path:dependencies" }
+allprojects {
+  tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.deprecation = true
+    options.debug = true
+    options.warnings = false
+    options.encoding = "UTF-8"
+    options.compilerArgs += '-Xlint:-deprecation'
+  }
+}
 
-    description = "Print dependency tree of all projects"
+
+tasks.register('allDependencies') {
+  dependsOn allprojects.collect { "$it.path:dependencies" }
+  description = "Print dependency tree of all projects"
 }
 
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./build.gradle")
@@ -53,4 +64,3 @@ apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscri
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./archive-task-helper.gradle")
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./release-task-helper.gradle")
 apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./test-task-helper.gradle")
-apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./compile-task-helper.gradle")

@@ -104,8 +104,13 @@ project.afterEvaluate {
         }
       }
 
+      test {
+        java {
+          runtimeClasspath += configurations.compileClasspath
+        }
+      }
 
-      pluginProject.tasks.create('generateResources') { thisTask ->
+      def generateResources = pluginProject.tasks.register('generateResources') { thisTask ->
         def injected = project.objects.newInstance(InjectedExecOps)
         thisTask.outputs.upToDateWhen {false}
         outputs.dir(generatedResourcesOutput)
@@ -123,12 +128,6 @@ project.afterEvaluate {
 
       pluginProject.tasks.named('processResources') {
         dependsOn generateResources
-      }
-
-      test {
-        java {
-          runtimeClasspath += configurations.compileClasspath
-        }
       }
     }
   }
