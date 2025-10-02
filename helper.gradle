@@ -33,7 +33,9 @@ if (System.getenv().containsKey("GO_SERVER_URL")) {
 }
 
 subprojects {
-  apply plugin: 'java'
+  plugins {
+    id 'java'
+  }
 
   java {
     sourceCompatibility = JavaVersion.VERSION_17
