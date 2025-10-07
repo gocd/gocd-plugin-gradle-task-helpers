@@ -21,6 +21,8 @@ import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 
 buildscript {
+  apply from: (buildscript.sourceFile ? buildscript.sourceFile.toURI() : buildscript.sourceURI).resolve("./build.gradle")
+
   repositories {
     gradlePluginPortal()
     mavenCentral()
