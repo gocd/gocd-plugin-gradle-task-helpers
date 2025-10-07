@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import java.text.DecimalFormat
 
 static String gitRevision() {
     def process = "git log -n 1 --format=%H".execute()
@@ -71,19 +70,11 @@ String getCommitsSinceLastTag(String from) {
     return hashStdOut.toString().trim()
 }
 
-static String readableFileSize(long size) {
-    if (size <= 0) return "0"
-    final String[] units = ["B", "KB", "MB", "GB", "TB"]
-    int digitGroups = (int) (Math.log10(size) / Math.log10(1024))
-    return new DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups]
-}
-
 allprojects { eachProject ->
     eachProject.ext.git = [
         gitRevision: this.&gitRevision,
         distVersion: this.&distVersion,
         getLastTag: this.&getLastTag,
         getCommitsSinceLastTag: this.&getCommitsSinceLastTag,
-        readableFileSize: this.&readableFileSize,
     ]
 }
