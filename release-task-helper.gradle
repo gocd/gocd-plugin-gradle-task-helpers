@@ -61,7 +61,8 @@ class GoCDPluginExtension {
   String vendorUrl
   List<String> targetOs = []
 
-  boolean prerelease
+  boolean prerelease = true
+  boolean prereleaseDryrun = true
 
   Project pluginProject
   Task[] assetsToRelease
@@ -104,36 +105,6 @@ abstract class ReleaseHelperTask extends DefaultTask {
   }
 }
 
-class VerifyExpRelease extends ReleaseHelperTask {
-  @TaskAction
-  verify() {
-    def tagName = "v${gocdPlugin.fullVersion(git)}-exp".toString()
-    def path = "/repos/${gocdPlugin.githubRepo.owner}/${gocdPlugin.githubRepo.repo}/releases/tags/${tagName}"
-
-    ((HttpURLConnection) new URL(GITHUB_API_BASE_URL + path).openConnection()).with({
-      requestMethod = 'GET'
-      setRequestProperty('User-Agent', HEADER_USER_AGENT)
-      setRequestProperty('Authorization', "token ${gocdPlugin.githubRepo.token}")
-      setRequestProperty('Accept', GITHUB_API_ACCEPT_HEADER)
-
-      def logMessage = "GET ${url}\n" +
-        " > User-Agent: ${getRequestProperty('User-Agent')}\n" +
-        " > Authorization: (not shown)\n" +
-        " > Accept: ${getRequestProperty('Accept')}\n"
-      logger.debug "$logMessage"
-
-      try {
-        def result = inputStream.text
-        if (responseCode != 200) {
-          throw handleHttpError(it, logMessage, result)
-        }
-      } catch (Exception e) {
-        throw handleHttpError(it, logMessage, null, e)
-      }
-    })
-  }
-}
-
 class ReleaseTask extends ReleaseHelperTask {
   @TaskAction
   release() {
@@ -156,7 +127,6 @@ class ReleaseTask extends ReleaseHelperTask {
     }\n```""".trim()
     def tagName = gocdPlugin.prerelease ? "${gocdPlugin.fullVersion(git)}-exp" : gocdPlugin.fullVersion(git)
 
-
     def postBody = [
       tag_name        : "v${tagName}".toString(),
       target_commitish: git.gitRevision().toString(),
@@ -165,10 +135,13 @@ class ReleaseTask extends ReleaseHelperTask {
         supportedGoCDVersionNote
         checksumNote
       }""".stripIndent().trim().toString(),
-      prerelease      : gocdPlugin.prerelease
+      prerelease      : gocdPlugin.prerelease,
+      draft           : gocdPlugin.prerelease && gocdPlugin.prereleaseDryrun,
     ]
 
-    ((HttpURLConnection) new URL(GITHUB_API_BASE_URL + path).openConnection()).with({
+    logger.quiet "Creating ${postBody.draft ? 'experimental draft ' : postBody.prerelease ? 'experimental ' : ''}release $tagName..."
+
+    ((HttpURLConnection) new URL(GITHUB_API_BASE_URL + path).openConnection() as HttpURLConnection).with({
       requestMethod = 'POST'
       doOutput = true
       setRequestProperty('User-Agent', HEADER_USER_AGENT)
@@ -196,9 +169,44 @@ class ReleaseTask extends ReleaseHelperTask {
         throw handleHttpError(it, logMessage, null, e)
       }
 
-      if (gocdPlugin.assetsToRelease != null) {
-        def json = new JsonSlurper().parseText(result)
-        postAssets(json.upload_url)
+      def resultJson = new JsonSlurper().parseText(result)
+      try {
+        if (gocdPlugin.assetsToRelease != null) {
+          logger.quiet "Uploading assets to release $tagName..."
+          postAssets(resultJson.upload_url)
+        }
+      } finally {
+        // If we're doing a dry-run, try and delete the draft release regardless of whether asset upload succeeded or failed.
+        if (postBody.draft) {
+          logger.quiet "Release was OK, deleting draft release $tagName..."
+          deleteRelease(resultJson.id.toString())
+        }
+      }
+    })
+  }
+
+  def deleteRelease(String releaseId) {
+    def path = "/repos/${gocdPlugin.githubRepo.owner}/${gocdPlugin.githubRepo.repo}/releases/${releaseId}"
+
+    ((HttpURLConnection) new URL(GITHUB_API_BASE_URL + path).openConnection() as HttpURLConnection).with({
+      requestMethod = 'DELETE'
+      setRequestProperty('User-Agent', HEADER_USER_AGENT)
+      setRequestProperty('Authorization', "token ${gocdPlugin.githubRepo.token}")
+      setRequestProperty('Accept', GITHUB_API_ACCEPT_HEADER)
+
+      def logMessage = "DELETE ${url}\n" +
+        " > User-Agent: ${getRequestProperty('User-Agent')}\n" +
+        " > Authorization: (not shown)\n" +
+        " > Accept: ${getRequestProperty('Accept')}\n"
+      logger.debug "$logMessage"
+
+      try {
+        def result = inputStream.text
+        if (responseCode >= 300) {
+          throw handleHttpError(it, logMessage, result)
+        }
+      } catch (Exception e) {
+        throw handleHttpError(it, logMessage, null, e)
       }
     })
   }
@@ -214,7 +222,7 @@ class ReleaseTask extends ReleaseHelperTask {
 
         if (file.exists()) {
 
-          ((HttpURLConnection) new URL(upload).openConnection()).with({
+          (new URL(upload).openConnection() as HttpURLConnection).with({
             requestMethod = 'POST'
             doOutput = true
             setRequestProperty('User-Agent', HEADER_USER_AGENT)
@@ -284,7 +292,6 @@ class GoCDPlugin implements Plugin<Project> {
       project.tasks.register('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
         thisTask.dependsOn project.allprojects*.tasks*.findByName('assemble').findAll { it != null }
       }
-      project.tasks.register('verifyExpRelease', VerifyExpRelease)
     }
   }
 

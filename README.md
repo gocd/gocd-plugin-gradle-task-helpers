@@ -36,7 +36,8 @@ gocdPlugin {
     // for multi project builds, use `project(':path-to-my-project')`
     pluginProject = project(':my-project')
 
-    prerelease = !"No".equalsIgnoreCase(System.getenv('PRERELEASE'))
+    prerelease = !"no".equalsIgnoreCase(System.getenv('PRERELEASE')) // All releases are pre-release (non-official by default)
+    prereleaseDryrun = !"Yes".equalsIgnoreCase(System.getenv('PRERELEASE')) // All pre-releases are dry-runs (drafted, then deleted from GH) by default
 
     // specify the `jar` task whose output must be published to github release
 
