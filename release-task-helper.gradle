@@ -90,22 +90,14 @@ class GoCDPluginExtension {
   }
 }
 
-abstract class ReleaseHelperTask extends DefaultTask {
-  @Internal final String HEADER_USER_AGENT = 'gocd-gradle-github-release-plugin'
-  @Internal final String GITHUB_API_BASE_URL = "https://api.github.com"
-  @Internal final String GITHUB_API_ACCEPT_HEADER = "application/vnd.github.v3+json"
+class ReleaseTask extends DefaultTask {
+  private static final def HEADER_USER_AGENT = 'gocd-gradle-github-release-plugin'
+  private static final def GITHUB_API_BASE_URL = "https://api.github.com"
+  private static final def GITHUB_API_ACCEPT_HEADER = "application/vnd.github.v3+json"
+
   @Input GoCDPluginExtension gocdPlugin = project.extensions.gocdPlugin
   @Input Object git = project.extensions.extraProperties.git
 
-  Exception handleHttpError(HttpURLConnection connection, String logMessage, String result, Throwable cause = null) {
-    logger.error "Error in $logMessage"
-    logger.info 'Response headers: \n' + connection.headerFields.collect { "< $it" }.join('\n')
-    logger.info result
-    new GradleScriptException("Error while creating release: ${connection.responseMessage}. Result = $result", cause)
-  }
-}
-
-class ReleaseTask extends ReleaseHelperTask {
   @TaskAction
   release() {
     def sha256Sums = gocdPlugin.assetsToRelease*.outputs*.files*.files.flatten().findAll { File it -> it.name.matches(".*\\.(SHA-256|SHA256)") }
@@ -163,10 +155,10 @@ class ReleaseTask extends ReleaseHelperTask {
       try {
         result = inputStream.text
         if (responseCode >= 300) {
-          throw handleHttpError(it, logMessage, result)
+          throw toException(it, logMessage, result)
         }
       } catch (Exception e) {
-        throw handleHttpError(it, logMessage, null, e)
+        throw toException(it, logMessage, null, e)
       }
 
       def resultJson = new JsonSlurper().parseText(result)
@@ -203,10 +195,10 @@ class ReleaseTask extends ReleaseHelperTask {
       try {
         def result = inputStream.text
         if (responseCode >= 300) {
-          throw handleHttpError(it, logMessage, result)
+          throw toException(it, logMessage, result)
         }
       } catch (Exception e) {
-        throw handleHttpError(it, logMessage, null, e)
+        throw toException(it, logMessage, null, e)
       }
     })
   }
@@ -240,18 +232,25 @@ class ReleaseTask extends ReleaseHelperTask {
             try {
               def result = inputStream.text
               if (responseCode >= 300) {
-                throw handleHttpError(it, logMessage, result)
+                throw toException(it, logMessage, result)
               } else {
                 def json = new JsonSlurper().parseText(result)
                 logger.debug "$json"
               }
             } catch (Exception e) {
-              throw handleHttpError(it, logMessage, null, e)
+              throw toException(it, logMessage, null, e)
             }
           })
         }
       }
     }
+  }
+
+  def toException(HttpURLConnection connection, String logMessage, String result, Throwable cause = null) {
+    logger.error "Error in $logMessage"
+    logger.info 'Response headers: \n' + connection.headerFields.collect { "< $it" }.join('\n')
+    logger.info result
+    new GradleScriptException("Error while creating release: ${connection.responseMessage}. Result = $result", cause)
   }
 }
 
