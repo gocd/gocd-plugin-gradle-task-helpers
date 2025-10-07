@@ -56,6 +56,8 @@
     { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "Common Development and Distribution( License)?" },
     { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "(?i)Common Development and Distribution License \\(CDDL\\) v(ersion)?\\s*1.0" },
     { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "CDDL(,)? (v)?1(\\.0)" },
+    { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "CDDL + GPLv2 with classpath exception" },  // Since it's an OR, e normalize this to CDDL (1.0) instead, since the version of CDDL is not specified
+    { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "CDDL+GPL License" }, // Since it's an OR, e normalize this to CDDL (1.0) instead, since the version of CDDL is not specified
     { "bundleName" : "CDDL-1.1", "licenseNamePattern" : "CDDL 1\\.1" },
     { "bundleName" : "CDDL-1.1", "licenseNamePattern" : "(?i)Common Development and Distribution License \\(CDDL\\) v(ersion)?\\s*1.1" },
     { "bundleName" : "EPL-1.0", "licenseNamePattern" : "Eclipse Public License.*(v|[v|V]ersion)\\.?\\s?1(\\.0)?" },
