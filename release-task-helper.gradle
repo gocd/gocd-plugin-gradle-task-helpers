@@ -312,7 +312,7 @@ class GoCDPlugin implements Plugin<Project> {
     pluginProject.extensions.licenseReport.excludes = gocdPlugin.licenseReport.excludes
     pluginProject.extensions.licenseReport.renderers = [new TextReportRenderer()]
     pluginProject.extensions.licenseReport.importers = gocdPlugin.licenseReport.importers
-    pluginProject.extensions.licenseReport.filters = new LicenseBundleNormalizer(bundlePath: project.rootProject.licenseNormalizerBundle)
+    pluginProject.extensions.licenseReport.filters = new SpdxLicenseBundleNormalizer(bundlePath: project.rootProject.licenseNormalizerBundle)
     pluginProject.extensions.licenseReport.allowedLicensesFile = project.rootProject.defaultAllowedLicenses
 
     gocdPlugin.assetsToRelease.findAll { jar ->

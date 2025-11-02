@@ -1,19 +1,20 @@
 {
   "allowedLicenses": [
-    {"moduleLicense": "^BSD$"},
-    {"moduleLicense": "^The 2-Clause BSD License$"},
-    {"moduleLicense": "^The 3-Clause BSD License$"},
-    {"moduleLicense": "Apache License, Version 2.0"},
-    {"moduleLicense": "MIT License"},
-    {"moduleLicense": "MIT No Attribution License"},
-    {"moduleLicense": "GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1"},
-    {"moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception"},
-    {"moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL), Version 1.0"},
-    {"moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL), Version 1.1"},
-    {"moduleLicense": "Bouncy Castle Licence"},
-    {"moduleLicense": "Eclipse Distribution License - v1.0"},
-    {"moduleLicense": "Eclipse Public License - v1.0"},
-    {"moduleLicense": "Eclipse Public License - v2.0"},
-    {"moduleLicense": "Creative Commons Legal Code"}
+    {"moduleLicense": "Apache-2.0"},
+    {"moduleLicense": "0BSD"},
+    {"moduleLicense": "BSD-2-Clause"},
+    {"moduleLicense": "BSD-3-Clause"},
+    {"moduleLicense": "CC0-1.0"},
+    {"moduleLicense": "CDDL-1.0"},
+    {"moduleLicense": "CDDL-1.1"},
+    {"moduleLicense": "EPL-1.0"},
+    {"moduleLicense": "EPL-2.0"},
+    {"moduleLicense": "FSL-1.1-ALv2"},
+    {"moduleLicense": "FSL-1.1-MIT"},
+    {"moduleLicense": "GPL-2.0 WITH Classpath-exception-2.0"},
+    {"moduleLicense": "GPL-2.0-only WITH Classpath-exception-2.0"},
+    {"moduleLicense": "LGPL-2.1-only"},
+    {"moduleLicense": "MIT"},
+    {"moduleLicense": "MIT-0"}
   ]
 }
