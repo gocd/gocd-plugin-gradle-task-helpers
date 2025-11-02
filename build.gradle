@@ -12,3 +12,10 @@ ext {
     //noinspection GroovyAssignabilityCheck
     taskHelperDeps = libraries
 }
+
+if (System.getenv("IS_DEPENDABOT")) {
+  repositories {
+    gradlePluginPortal()
+    mavenCentral()
+  }
+}
