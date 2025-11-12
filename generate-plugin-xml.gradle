@@ -85,9 +85,8 @@ private static String pluginProperties(gocdPlugin, version) {
   """.stripIndent().trim()
 }
 
-interface InjectedExecOps {
-    @Inject //@javax.inject.Inject
-    ExecOperations getExecOps()
+interface Injected {
+  @Inject FileSystemOperations getFileOps()
 }
 
 project.afterEvaluate {
@@ -111,12 +110,12 @@ project.afterEvaluate {
       }
 
       def generateResources = pluginProject.tasks.register('generateResources') { thisTask ->
-        def injected = project.objects.newInstance(InjectedExecOps)
         thisTask.outputs.upToDateWhen {false}
         outputs.dir(generatedResourcesOutput)
 
+        def injected = project.objects.newInstance(Injected)
         doFirst {
-          project.delete(generatedResourcesOutput)
+          injected.fileOps.delete { delete(generatedResourcesOutput) }
           generatedResourcesOutput.mkdirs()
 
           new File(generatedResourcesOutput, "plugin.xml").setText(xmlTemplate(pluginProject.gocdPlugin, pluginProject.version), "utf-8")
