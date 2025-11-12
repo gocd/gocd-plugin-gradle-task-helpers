@@ -72,7 +72,7 @@ class GoCDPluginExtension {
   final GitHubRepository githubRepo
   final Report licenseReport
 
-  @javax.inject.Inject
+  @Inject
   GoCDPluginExtension(ObjectFactory objectFactory) {
     githubRepo = objectFactory.newInstance(GitHubRepository)
     licenseReport = objectFactory.newInstance(Report)
