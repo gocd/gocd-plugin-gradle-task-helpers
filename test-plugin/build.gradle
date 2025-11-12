@@ -13,7 +13,7 @@ gocdPlugin {
   name = 'Task Helper Test Plugin'
   description = 'Test plugin to sanity check Gradle task helpers'
   vendorName = 'GoCD Contributors'
-  vendorUrl = 'https://github.com/gocd-contrib/gocd-plugin-gradle-task-helpers'
+  vendorUrl = 'https://github.com/gocd/gocd-plugin-gradle-task-helpers'
 
   githubRepo {
     owner = System.getenv('GITHUB_USER') ?: 'bob'
