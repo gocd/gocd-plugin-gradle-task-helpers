@@ -1,0 +1,142 @@
+import groovy.json.JsonSlurper
+
+plugins {
+  id 'java'
+}
+
+apply from: '../helper.gradle'
+
+gocdPlugin {
+  id = 'task-helper-test-plugin'
+  pluginVersion = '1.0.0'
+  goCdVersion = '22.1.0'
+  name = 'Task Helper Test Plugin'
+  description = 'Test plugin to sanity check Gradle task helpers'
+  vendorName = 'GoCD Contributors'
+  vendorUrl = 'https://github.com/gocd-contrib/gocd-plugin-gradle-task-helpers'
+
+  githubRepo {
+    owner = System.getenv('GITHUB_USER') ?: 'bob'
+    repo = 'gocd-plugin-gradle-task-helpers'
+    token = System.getenv('GITHUB_TOKEN') ?: 'bad-token'
+  }
+
+  pluginProject = project
+
+  prerelease = !"No".equalsIgnoreCase(System.getenv('PRERELEASE'))
+  prereleaseDryrun = !"Yes".equalsIgnoreCase(System.getenv('PRERELEASE'))
+  assetsToRelease = [project.tasks.jar]
+}
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(JavaCompile).configureEach {
+  options.release = 17
+}
+
+allprojects {
+  group = 'cd.go.contrib'
+  version = gocdPlugin.fullVersion(project)
+}
+
+repositories {
+  mavenCentral()
+}
+
+ext {
+  deps = [
+    gocdPluginApi: 'cd.go.plugin:go-plugin-api:25.3.0',
+    gson         : 'com.google.code.gson:gson:2.13.2',
+  ]
+
+  versions = project.ext.deps.collectEntries { lib, libGav -> [lib, libGav.split(':').last()] }
+}
+
+dependencies {
+  compileOnly project.deps.gocdPluginApi
+  implementation project.deps.gson
+
+  components {
+    // workaround for Guava metadata declaring dependencies that are not needed at runtime
+    // see https://github.com/google/guava/pull/6606
+    withModule('com.google.guava:guava', { details ->
+      details.allVariants {
+        withDependencies {
+          removeAll {
+            it.name in ['error_prone_annotations']
+          }
+        }
+      }
+    })
+  }
+
+  testImplementation platform('org.junit:junit-bom:6.0.0')
+  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+  testImplementation 'org.mockito:mockito-core:5.20.0'
+  testImplementation 'org.assertj:assertj-core:3.27.6'
+  testImplementation "cd.go.plugin:go-plugin-api:${project.versions.gocdPluginApi}"
+}
+
+test {
+  useJUnitPlatform()
+}
+
+jar {
+  from(configurations.runtimeClasspath) {
+    into "lib/"
+  }
+}
+
+tasks.register('testSanityJar') {
+  group = 'verification'
+  description = 'Runs sanity checks to verify the plugin has been generated as expected.'
+  dependsOn tasks.jar
+
+  def gsonVersion = project.versions.gson
+
+  doLast {
+    def outputs = tasks.jar.outputs.files
+    outputs.forEach { assert it.name.endsWithAny('.jar', '.jar.MD5', '.jar.SHA1', '.jar.SHA-256'), "Jar output unexpected $it" }
+
+    def jarFile = outputs.find { it.name.endsWith('.jar') }
+
+    zipTree(jarFile).with { ft ->
+      def zipContains = { String... fileNames -> fileNames.every { fn -> ft.any { it.path.endsWith(fn) } } }
+
+      assert zipContains('plugin.properties', 'plugin.xml', 'META-INF/MANIFEST.MF'), "Plugin metadata is missing from $files"
+      assert zipContains('license-report/THIRD-PARTY-NOTICES.txt'), "License report is missing from $files"
+      assert zipContains("lib/gson-${gsonVersion}.jar"), "GSON runtime dependency is missing from $files"
+      assert zipContains('org/gocd/plugin/taskhelpers/test/GoPluginImpl.class'), "Compiled plugin code is missing from $files"
+
+      def fileContents = { String name -> (ft.find { it.name == name } as File).text }
+
+      assert fileContents('MANIFEST.MF').containsIgnoreCase("Plugin-Revision: 1.0.0"), "Manifest missing GoCD plugin entries"
+      assert fileContents('plugin.properties').containsIgnoreCase("goCdVersion=22.1.0"), "plugin.properties missing GoCD plugin entries"
+      assert fileContents('plugin.xml').containsIgnoreCase("<target-go-version>22.1.0</target-go-version>"), "plugin.xml missing GoCD plugin entries"
+      assert fileContents('THIRD-PARTY-NOTICES.txt').containsIgnoreCase("1. Group: com.google.code.gson  Name: gson"), "license report missing GSON entry"
+    }
+  }
+}
+
+tasks.register('testSanityCheckLicense') {
+  group = 'verification'
+  description = 'Runs sanity checks to verify the license check ran.'
+  def checkLicenseTask = tasks.named('checkLicense')
+  dependsOn checkLicenseTask
+
+  doLast {
+    assert new JsonSlurper().parse(checkLicenseTask.get().outputs.files.singleFile)?.dependenciesWithoutAllowedLicenses?.empty, "License check doesn't seem to have run."
+  }
+}
+
+check {
+  dependsOn tasks.testSanityJar
+  dependsOn tasks.testSanityCheckLicense
+}
