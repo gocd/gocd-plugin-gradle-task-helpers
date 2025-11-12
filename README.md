@@ -2,6 +2,10 @@
 
 This repo contains common gradle tasks if you're building a GoCD plugin using gradle.
 
+## Example
+
+See [test-plugin/build.gradle](test-plugin/build.gradle) for a sample plugin used internally by the helpers to test themselves.
+
 ## Usage
 
 In your root project's `build.gradle` file add the following line:
