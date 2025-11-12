@@ -116,9 +116,7 @@ project.afterEvaluate {
         outputs.dir(generatedResourcesOutput)
 
         doFirst {
-          injected.execOps.exec {
-            commandLine 'rm', '-rf', generatedResourcesOutput
-          }
+          project.delete(generatedResourcesOutput)
           generatedResourcesOutput.mkdirs()
 
           new File(generatedResourcesOutput, "plugin.xml").setText(xmlTemplate(pluginProject.gocdPlugin, pluginProject.version), "utf-8")
