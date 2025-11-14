@@ -1,10 +1,12 @@
 // Augment the transformations at https://github.com/jk1/Gradle-License-Report/blob/master/src/main/resources/spdx-license-normalizer-bundle.json
 {
   "transformationRules" : [
+    { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "CDDL.*1\\.0" }, // Missing rule from parent bundle
+    { "bundleName" : "CDDL-1.1", "licenseNamePattern" : "CDDL.*1\\.1" }, // Missing rule from parent bundle
     { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "CDDL + GPLv2 with classpath exception" },  // Since it's an OR, e normalize this to CDDL (1.0) instead, since the version of CDDL is not specified
     { "bundleName" : "CDDL-1.0", "licenseNamePattern" : "CDDL+GPL License" }, // Since it's an OR, e normalize this to CDDL (1.0) instead, since the version of CDDL is not specified
     { "bundleName" : "EPL-1.0", "licenseNamePattern" : "MPL 2.0 or EPL 1.0" }, // Since it's an OR, we chose EPL since it's already reviewed and allowed
-    { "bundleName" : "MIT", "licenseNamePattern" : "(The\\s)?Bouncy Castle Licen[cs]e", "transformUrl" : false },
-    { "bundleName" : "MIT-0", "licenseNamePattern" : "(The\\s)?MIT No Attribution(\\s[l|L]icen[c|s]e)?(\\s[(]MIT[-]?0[)])?" }
+    { "bundleName" : "MIT", "licenseNamePattern" : "(The\\s)?Bouncy Castle Licen[cs]e", "transformUrl" : false }, // Missing rule from parent bundle
+    { "bundleName" : "MIT-0", "licenseNamePattern" : "(The\\s)?MIT No Attribution(\\s[l|L]icen[c|s]e)?(\\s[(]MIT[-]?0[)])?" } // Missing rule from parent bundle
   ]
 }
