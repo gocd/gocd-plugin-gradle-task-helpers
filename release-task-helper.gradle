@@ -265,30 +265,10 @@ class GoCDPlugin implements Plugin<Project> {
       project.allprojects { apply plugin: com.github.jk1.license.LicenseReportPlugin }
     }
 
-    GoCDPluginExtension gocdPluginExtension = project.extensions.create('gocdPlugin', GoCDPluginExtension)
+    GoCDPluginExtension gocdPlugin = project.extensions.create('gocdPlugin', GoCDPluginExtension)
 
     project.afterEvaluate {
-      initializeLicenseReporting(gocdPluginExtension, project)
-
-      project.tasks.register('showLicenseReportErrors') { DefaultTask thisTask ->
-        def checkLicenseTask = project.tasks.named('checkLicense')
-        checkLicenseTask.finalizedBy(thisTask)
-
-        doLast {
-
-          def reportText = checkLicenseTask.get().outputs.files.singleFile.text
-          def reportContents = new JsonSlurper().parseText(reportText)
-
-          if (reportContents.containsKey('dependenciesWithoutAllowedLicenses')) {
-            if (!reportContents.dependenciesWithoutAllowedLicenses.empty) {
-                println "Failed to validate licenses for the following modules:"
-                println reportText
-            }
-          } else {
-            throw new GradleException("Could not find key `dependenciesWithoutAllowedLicenses` in license report: ${reportText}")
-          }
-        }
-      }
+      initializeLicenseReporting(gocdPlugin, project)
 
       project.tasks.register('githubRelease', ReleaseTask) { ReleaseTask thisTask ->
         thisTask.dependsOn project.allprojects*.tasks*.findByName('assemble').findAll { it != null }
@@ -301,7 +281,7 @@ class GoCDPlugin implements Plugin<Project> {
 
     if (pluginProject == null) return
 
-    pluginProject.tasks.assemble.dependsOn("checkLicense")
+    def checkLicenseTask = pluginProject.tasks.named('checkLicense')
     project.extensions.licenseReport.outputDir = gocdPlugin.licenseReport.outputDir ?: "${project.layout.buildDirectory.get()}/license"
     pluginProject.extensions.licenseReport.outputDir = gocdPlugin.licenseReport.outputDir ?: "${project.layout.buildDirectory.get()}/license"
     pluginProject.extensions.licenseReport.projects = gocdPlugin.licenseReport.projects ?: project.allprojects
@@ -321,6 +301,28 @@ class GoCDPlugin implements Plugin<Project> {
       jar.into('license-report') {
         from "$pluginProject.extensions.licenseReport.outputDir/THIRD-PARTY-NOTICES.txt"
       }
+    }
+
+    def showLicenseReportErrors = pluginProject.tasks.register('showLicenseReportErrors') {
+      doLast {
+        def reportText = checkLicenseTask.get().outputs.files.singleFile.text
+        def reportContents = new JsonSlurper().parseText(reportText)
+
+        if (reportContents.containsKey('dependenciesWithoutAllowedLicenses')) {
+          if (!reportContents.dependenciesWithoutAllowedLicenses.empty) {
+            println "Failed to validate licenses for the following modules:"
+            println reportText
+          }
+        } else {
+          throw new GradleException("Could not find key `dependenciesWithoutAllowedLicenses` in license report: ${reportText}")
+        }
+      }
+    }
+    pluginProject.tasks.named('assemble').configure {
+      dependsOn(checkLicenseTask)
+    }
+    checkLicenseTask.configure {
+      finalizedBy(showLicenseReportErrors)
     }
   }
 }
