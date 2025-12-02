@@ -9,6 +9,6 @@
     { "bundleName" : "LGPL-2.1-only", "licenseNamePattern" : ".*GNU LESSER GENERAL PUBLIC LICENSE.*2\\.1.*" },                // Remove on v3.0.2+ - Missing rules from parent bundle
     { "bundleName" : "LGPL-3.0-only", "licenseNamePattern" : ".*GNU LESSER GENERAL PUBLIC LICENSE.*3.*" },                    // Remove on v3.0.2+ - Missing rules from parent bundle
     { "bundleName" : "MIT", "licenseNamePattern" : "(The\\s)?Bouncy Castle Licen[cs]e", "transformUrl" : false },             // Remove on v3.0.2+ - Missing rules from parent bundle
-    { "bundleName" : "MIT-0", "licenseNamePattern" : "(The\\s)?MIT No Attribution(\\s[l|L]icen[c|s]e)?(\\s[(]MIT[-]?0[)])?" } // Remove on v3.0.2+ - Missing rules from parent bundle
+    { "bundleName" : "MIT-0", "licenseNamePattern" : "(The\\s)?MIT No Attribution(\\slicen[cs]e)?(\\s\\(MIT[-]?0\\))?" } // Remove on v3.0.2+ - Missing rules from parent bundle
   ]
 }
