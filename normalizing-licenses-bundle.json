@@ -11,6 +11,6 @@
     { "bundleName" : "LGPL-2.1-only", "licenseNamePattern" : ".*GNU LESSER GENERAL PUBLIC LICENSE.*2\\.1.*" },
     { "bundleName" : "LGPL-3.0-only", "licenseNamePattern" : ".*GNU LESSER GENERAL PUBLIC LICENSE.*3.*" },
     { "bundleName" : "MIT", "licenseNamePattern" : "(The\\s)?Bouncy Castle Licen[cs]e", "transformUrl" : false },
-    { "bundleName" : "MIT-0", "licenseNamePattern" : "(The\\s)?MIT No Attribution(\\s[l|L]icen[c|s]e)?(\\s[(]MIT[-]?0[)])?" },
+    { "bundleName" : "MIT-0", "licenseNamePattern" : "(The\\s)?MIT No Attribution(\\s[l|L]icen[c|s]e)?(\\s[(]MIT[-]?0[)])?" }
   ]
 }
