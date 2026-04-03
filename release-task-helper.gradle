@@ -303,26 +303,8 @@ class GoCDPlugin implements Plugin<Project> {
       }
     }
 
-    def showLicenseReportErrors = pluginProject.tasks.register('showLicenseReportErrors') {
-      doLast {
-        def reportText = checkLicenseTask.get().outputs.files.singleFile.text
-        def reportContents = new JsonSlurper().parseText(reportText)
-
-        if (reportContents.containsKey('dependenciesWithoutAllowedLicenses')) {
-          if (!reportContents.dependenciesWithoutAllowedLicenses.empty) {
-            println "Failed to validate licenses for the following modules:"
-            println reportText
-          }
-        } else {
-          throw new GradleException("Could not find key `dependenciesWithoutAllowedLicenses` in license report: ${reportText}")
-        }
-      }
-    }
     pluginProject.tasks.named('assemble').configure {
       dependsOn(checkLicenseTask)
-    }
-    checkLicenseTask.configure {
-      finalizedBy(showLicenseReportErrors)
     }
   }
 }
